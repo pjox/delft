@@ -12,11 +12,13 @@ target
 *.obj
 *.zip
 *.gz
-data/db
+data/db/*
 data/training
 data/eval
 data/embeddings
 data/sequenceLabelling/CoNLL-2003/eng.*
+data/sequenceLabelling/leMonde/*
+data/sequenceLabelling/ontonotes/*
 data/resources
 data/clearNLP
 logs
