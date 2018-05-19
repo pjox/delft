@@ -36,7 +36,11 @@ It is advised to setup first a virtual environment to avoid falling into one of 
 
 > source env/bin/activate
 
-Install the dependencies:
+Install the dependencies, if you have a GPU and CUDA (>=8.0) installed use:
+
+> pip3 install -r requirements-gpu.txt
+
+otherwise if you can use only your CPU:
 
 > pip3 install -r requirements.txt
 
@@ -111,21 +115,41 @@ Ok, ok, then set the `embedding-lmdb-path` value to `"None"` in the file `embedd
 
 #### NER
 
-Assuming that the usual CoNLL-2003 NER dataset (`eng.train`, `eng.testa`, `eng.testb`) is present under `data/sequenceLabelling/CoNLL-2003/`, for training and evaluating use:
+DeLFT comes with a pre-trained model for the CoNLL-2003 NER dataset. By default, the BidLSTM-CRF model is used. With this available model, glove-840B word embeddings, the current f1 score on CoNLL 2003 _testb_ set is __91.09__ (using _train_ set for training and _testa_ for validation), as compared to the 90.94 reported in [1].
+
+For re-training a model, assuming that the usual CoNLL-2003 NER dataset (`eng.train`, `eng.testa`, `eng.testb`) is present under `data/sequenceLabelling/CoNLL-2003/`, for training and evaluating use:
 
 > python3 nerTagger.py train_eval
 
-By default, the BidLSTM-CRF model is used. With this available model, glove-840B word embeddings, current f1 score on CoNLL 2003 testb set is __91.07__ (using _train_ set for training and _testa_ for validation), as compared to the 90.94 reported in [1].
+By default, the BidLSTM-CRF model is used. Documentation on selecting other models and setting hyperparameters to be included here !
 
 For evaluating against CoNLL 2003 testb set with the existing model:
 
 > python3 nerTagger.py eval
 
+```
+    Evaluation on test set:
+        f1 (micro): 91.05
+                 precision    recall  f1-score   support
+
+            ORG     0.8967    0.8784    0.8875      1661
+           MISC     0.8003    0.8162    0.8082       702
+            PER     0.9634    0.9604    0.9619      1617
+            LOC     0.9197    0.9341    0.9268      1668
+
+    avg / total     0.9104    0.9106    0.9105      5648
+
+```
+
 For training with all the available data:
 
 > python3 nerTagger.py train
 
-For tagging some text, use the command:
+You can also train multiple times with the n-folds options: the model will be trained n times with different seed values but with the same sets if the evaluation set is provided. The evaluation will then give the average scores over these n models (against test set) and for the best model which will be saved. For 10 times training for instance, use:
+
+> python3 nerTagger.py train_eval --fold-count 10
+
+After training a model, for tagging some text, use the command:
 
 > python3 nerTagger.py tag
 
@@ -459,6 +483,14 @@ __Production stack__:
 __Build more models and examples__...
 
 * e.g. POS tagger and dependency parser
+
+## Acknowledgments
+
+* Keras CRF implementation by Philipp Gross 
+
+* The evaluations for sequence labelling are based on a modified version of https://github.com/chakki-works/seqeval
+
+* The preprocessor of the sequence labelling part is derived from https://github.com/Hironsan/anago/
 
 ## License and contact
 

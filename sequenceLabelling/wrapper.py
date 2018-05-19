@@ -12,7 +12,7 @@ from sequenceLabelling.preprocess import prepare_preprocessor, WordPreprocessor
 from sequenceLabelling.tagger import Tagger
 from sequenceLabelling.trainer import Trainer
 from sequenceLabelling.data_generator import DataGenerator
-from sequenceLabelling.trainer import F1scorer
+from sequenceLabelling.trainer import Scorer
 
 from utilities.Embeddings import Embeddings
 
@@ -45,6 +45,7 @@ class Sequence(object):
                  lr_decay=0.9,
                  clip_gradients=5.0, 
                  max_epoch=50, 
+                 early_stop=True,
                  patience=5,
                  max_checkpoints_to_keep=5, 
                  log_dir=None,
@@ -58,8 +59,8 @@ class Sequence(object):
 
         word_emb_size = 0
         if embeddings_name is not None:
-          self.embeddings = Embeddings(embeddings_name) 
-          word_emb_size = self.embeddings.embed_size
+            self.embeddings = Embeddings(embeddings_name) 
+            word_emb_size = self.embeddings.embed_size
 
         self.model_config = ModelConfig(model_name=model_name, 
                                         model_type=model_type, 
@@ -78,7 +79,8 @@ class Sequence(object):
 
         self.training_config = TrainingConfig(batch_size, optimizer, learning_rate,
                                               lr_decay, clip_gradients, max_epoch,
-                                              patience, max_checkpoints_to_keep)
+                                              early_stop, patience, 
+                                              max_checkpoints_to_keep)
 
 
     def train(self, x_train, y_train, x_valid=None, y_valid=None):
@@ -107,10 +109,13 @@ class Sequence(object):
         self.model_config.char_vocab_size = len(self.p.vocab_char)
         self.model_config.case_vocab_size = len(self.p.vocab_case)
         self.p.return_lengths = True
+        
+        #self.model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
+        self.models = []
 
-        for k in range(0,fold_number-1):
-            #self.model = BidLSTM_CRF(self.model_config, len(self.p.vocab_tag))
-            self.model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
+        for k in range(0, fold_number):
+            #model = BidLSTM_CRF(self.model_config, len(self.p.vocab_tag))
+            model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
             self.models.append(model)
 
         trainer = Trainer(self.model, 
@@ -125,8 +130,41 @@ class Sequence(object):
 
 
     def eval(self, x_test, y_test):
-        if self.model_config.fold_number is 1:
-            if self.model:
+        if self.model_config.fold_number > 1 and self.models and len(self.models) == self.model_config.fold_number:
+            self.eval_nfold(x_test, y_test)
+        else:
+            self.eval_single(x_test, y_test)
+
+
+    def eval_single(self, x_test, y_test):   
+        if self.model:
+            # Prepare test data(steps, generator)
+            test_generator = DataGenerator(x_test, y_test, 
+              batch_size=self.training_config.batch_size, preprocessor=self.p, 
+              char_embed_size=self.model_config.char_embedding_size, 
+              embeddings=self.embeddings, shuffle=False)
+
+            # Build the evaluator and evaluate the model
+            scorer = Scorer(test_generator, self.p, evaluation=True)
+            scorer.model = self.model
+            scorer.on_epoch_end(epoch=-1) 
+        else:
+            raise (OSError('Could not find a model.'))
+
+
+    def eval_nfold(self, x_test, y_test):
+        if self.models is not None:
+            total_f1 = 0
+            best_f1 = 0
+            best_index = 0
+            worst_f1 = 1
+            worst_index = 0
+            reports = []
+            total_precision = 0
+            total_recall = 0
+            for i in range(0, self.model_config.fold_number):
+                print('\n------------------------ fold ' + str(i) + '--------------------------------------')
+
                 # Prepare test data(steps, generator)
                 test_generator = DataGenerator(x_test, y_test, 
                   batch_size=self.training_config.batch_size, preprocessor=self.p, 
@@ -134,38 +172,40 @@ class Sequence(object):
                   embeddings=self.embeddings, shuffle=False)
 
                 # Build the evaluator and evaluate the model
-                f1scorer = F1scorer(test_generator, self.p, evaluation=True)
-                f1scorer.model = self.model
-                f1scorer.on_epoch_end(epoch=-1) 
-            else:
-                raise (OSError('Could not find a model.'))
-        """
-        else:
-            if self.models is not None:
-                total_f1 = 0
-                total_correct_preds = 0
-                total_total_correct = 0
-                total_total_preds = 0
-                for i in range(0, self.model_config.fold_number):
-                    # Prepare test data(steps, generator)
-                    test_generator = DataGenerator(x_test, y_test, 
-                      batch_size=self.training_config.batch_size, preprocessor=self.p, 
-                      word_embed_size=self.model_config.word_embedding_size, 
-                      char_embed_size=self.model_config.char_embedding_size, 
-                      embeddings=self.embeddings, shuffle=False)
+                scorer = Scorer(test_generator, self.p, evaluation=True)
+                scorer.model = self.models[i]
+                scorer.on_epoch_end(epoch=-1) 
+                f1 = scorer.f1
+                precision = scorer.precision
+                recall = scorer.recall
+                reports.append(scorer.report)
+                
+                if best_f1 < f1:
+                    best_f1 = f1
+                    best_index = i
+                if worst_f1 > f1:
+                    worst_f1 = f1
+                    worst_index = i
+                total_f1 += f1
+                total_precision += precision
+                total_recall += recall
 
-                    # Build the evaluator and evaluate the model
-                    f1scorer = F1scorer(test_generator, self.p)
-                    f1scorer.model = self.models[i]
-                    f1scorer.on_epoch_end(epoch=-1) 
-                    f1 = f1scorer.f1
-                    correct_preds = f1scorer.correct_preds
-                    total_correct = f1scorer.total_correct
-                    total_preds = f1scorer.total_preds
+            macro_f1 = total_f1 / self.model_config.fold_number
+            macro_precision = total_precision / self.model_config.fold_number
+            macro_recall = total_recall / self.model_config.fold_number
 
-                macro_f1 = f1scorer.calc_f1(total_correct_preds, total_total_correct, total_total_preds)
-                micro_f1 = total_f1 / self.model_config.fold_number
-        """
+            print("\naverage over", self.model_config.fold_number, "folds")
+            print("\tmacro f1 =", macro_f1)
+            print("\tmacro precision =", macro_precision)
+            print("\tmacro recall =", macro_recall, "\n")
+
+            print("\n** Worst ** model scores - \n")
+            print(reports[worst_index])
+
+            self.model = self.models[best_index]
+            print("\n** Best ** model scores - \n")
+            print(reports[best_index])
+        
 
     def tag(self, texts, output_format):
         if self.model:
