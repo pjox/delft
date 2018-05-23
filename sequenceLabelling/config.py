@@ -5,7 +5,7 @@ class ModelConfig(object):
 
     def __init__(self, 
                  model_name="",
-                 model_type="BidLSTM_CNN_CRF",
+                 model_type="BidLSTM_CRF",
                  embeddings_name="glove-840B",
                  word_embedding_size=300,
                  char_emb_size=25, 
@@ -13,7 +13,7 @@ class ModelConfig(object):
                  max_char_length=30,
                  word_lstm_units=100, 
                  dropout=0.5, 
-                 recurrent_dropout=0.5,
+                 recurrent_dropout=0.3,
                  use_char_feature=True, 
                  use_crf=True,
                  fold_number=1,

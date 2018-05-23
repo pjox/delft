@@ -1,6 +1,6 @@
 import os
 from sequenceLabelling.data_generator import DataGenerator
-from keras.optimizers import Adam, SDG
+from keras.optimizers import Adam
 from keras.callbacks import Callback, TensorBoard, EarlyStopping, ModelCheckpoint
 from keras.utils import plot_model
 
@@ -46,16 +46,9 @@ class Trainer(object):
     def train(self, x_train, y_train, x_valid, y_valid):
         self.model.summary()
         #print("self.model_config.use_crf:", self.model_config.use_crf)
-
-        # SDG config for BidLSTM_CNN_CRF
-        sgd = SGD(lr=0.015, decay=0.05, momentum=0.9, clipvalue=0.5)
         
         if self.model_config.use_crf:
-            if self.model_config.model_type == 'BidLSTM_CNN_CRF':
-                self.model.compile(loss=self.model.crf.loss,
-                           optimizer=sdg)
-            else:
-                self.model.compile(loss=self.model.crf.loss,
+            self.model.compile(loss=self.model.crf.loss,
                            optimizer='adam')
         else:
             self.model.compile(loss='categorical_crossentropy',
