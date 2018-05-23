@@ -5,6 +5,7 @@ target
 .settings
 .classpath
 .idea
+run.sh
 *.iml
 *.log
 *.log.*
@@ -12,6 +13,7 @@ target
 *.obj
 *.zip
 *.gz
+OAR*
 data/db/*
 data/training
 data/eval
