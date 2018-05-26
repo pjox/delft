@@ -6,7 +6,6 @@ from keras.initializers import RandomUniform
 from keras.models import Model
 from keras.models import clone_model
 from utilities.layers import ChainCRF
-from keras.utils import multi_gpu_model
 import numpy as np
 np.random.seed(7)
 from tensorflow import set_random_seed
@@ -112,10 +111,7 @@ class BidLSTM_CRF(BaseModel):
         self.crf = ChainCRF()
         pred = self.crf(x)
 
-        model = Model(inputs=[word_input, char_input, length_input], outputs=[pred])
-        model = multi_gpu_model(model, gpus=2)
-
-        self.model = model
+        self.model = Model(inputs=[word_input, char_input, length_input], outputs=[pred])
         self.config = config
 
 
