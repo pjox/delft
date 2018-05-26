@@ -33,6 +33,6 @@
             "item": "word"
         }
     ],
-    "embedding-lmdb-path": "None"
+    "embedding-lmdb-path": "data/db"
 }
 
