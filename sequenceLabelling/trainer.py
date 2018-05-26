@@ -48,11 +48,8 @@ class Trainer(object):
         #print("self.model_config.use_crf:", self.model_config.use_crf)
         
         if self.model_config.use_crf:
-            try:
-                self.model = multi_gpu_model(self.model, gpus=2)
-                print("Training using multiple GPUs..")
-            except:
-                print("Training using single GPU or CPU..")
+            self.model = multi_gpu_model(self.model)
+            print("Training using multiple GPUs..")
             self.model.compile(loss=self.model.crf.loss,
                            optimizer='adam')
         else:
