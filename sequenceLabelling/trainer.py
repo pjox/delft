@@ -2,7 +2,7 @@ import os
 from sequenceLabelling.data_generator import DataGenerator
 from keras.optimizers import Adam
 from keras.callbacks import Callback, TensorBoard, EarlyStopping, ModelCheckpoint
-from keras.utils import plot_model, multi_gpu_model
+from keras.utils import plot_model
 
 # seqeval
 from sequenceLabelling.evaluation import accuracy_score
@@ -48,8 +48,6 @@ class Trainer(object):
         #print("self.model_config.use_crf:", self.model_config.use_crf)
         
         if self.model_config.use_crf:
-            self.model = multi_gpu_model(self.model, gpus=2)
-            print("Training using multiple GPUs..")
             self.model.compile(loss=self.model.crf.loss,
                            optimizer='adam')
         else:
