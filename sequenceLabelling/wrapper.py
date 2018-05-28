@@ -40,7 +40,7 @@ class Sequence(object):
                  recurrent_dropout=0.25,
                  use_char_feature=True, 
                  use_crf=True,
-                 batch_size=32, 
+                 batch_size=16, 
                  optimizer='nadam', 
                  learning_rate=0.0001, 
                  lr_decay=0.5,
