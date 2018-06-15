@@ -37,7 +37,7 @@ class Sequence(object):
                  char_lstm_units=25,
                  word_lstm_units=100, 
                  dropout=0.5, 
-                 recurrent_dropout=0.5,
+                 recurrent_dropout=0.25,
                  use_char_feature=True, 
                  use_crf=True,
                  batch_size=16, 
@@ -50,6 +50,7 @@ class Sequence(object):
                  patience=5,
                  max_checkpoints_to_keep=5, 
                  log_dir=None,
+                 use_ELMo=False,
                  fold_number=1):
 
         self.model = None
@@ -60,7 +61,7 @@ class Sequence(object):
 
         word_emb_size = 0
         if embeddings_name is not None:
-            self.embeddings = Embeddings(embeddings_name) 
+            self.embeddings = Embeddings(embeddings_name, use_ELMo=use_ELMo) 
             word_emb_size = self.embeddings.embed_size
 
         self.model_config = ModelConfig(model_name=model_name, 
@@ -115,7 +116,6 @@ class Sequence(object):
         self.models = []
 
         for k in range(0, fold_number):
-            #model = BidLSTM_CRF(self.model_config, len(self.p.vocab_tag))
             model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
             self.models.append(model)
 
