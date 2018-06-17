@@ -23,6 +23,6 @@ data/sequenceLabelling/leMonde/*
 data/sequenceLabelling/ontonotes/*
 data/resources
 data/clearNLP
-data/models/ELMo/en/*
+data/models/ELMo/en/*.hdf5
 logs
 *__pycache__*

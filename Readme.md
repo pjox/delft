@@ -11,7 +11,7 @@ __DeLFT__ (**De**ep **L**earning **F**ramework for **T**ext) is a Keras framewor
 
 From the observation that most of the open source implementations using Keras are toy examples, our motivation is to develop a framework that can be efficient, scalable and more usable in a production environment (with all the known limitations of Python of course for this purpose). The benefits of DELFT are:
 
-* Re-implement a variety of state-of-the-art deep learning architectures for both sequence labelling and text classification problems which can all be used within the same environment.
+* Re-implement a variety of state-of-the-art deep learning architectures for both sequence labelling and text classification problems, including the usage of the recent [ELMo](https://allennlp.org/elmo) contextualized embeddings, which can all be used within the same environment.
 
 * Reduce model size, in particular by removing word embeddings from them. For instance, the model for the toxic comment classifier went down from a size of 230 MB with embeddings to 1.8 MB. In practice the size of all the models of DeLFT is less than 2 MB.
 
@@ -28,6 +28,7 @@ DeLFT has been tested with python 3.5, Keras 2.1 and Tensorflow 1.7 as backend. 
 Get the github repo:
 
 > git clone https://github.com/kermitt2/delft
+
 > cd delft
 
 It is advised to setup first a virtual environment to avoid falling into one of these gloomy python dependency marshlands:
@@ -53,6 +54,8 @@ You need then to download some pre-trained word embeddings and notify their path
 - _word2vec GoogleNews_ (3M vocab., cased, 300 dim. vectors): [word2vec](https://drive.google.com/file/d/0B7XkCwpI5KDYNlNUTTlSS21pQmM/edit?usp=sharing)
 
 - _fasttext_wiki_fr_ (1.1M, NOT case, 300 dim. vectors) for French: [wiki.fr](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.fr.vec)
+
+- _ELMo_ trained on 5.5B word corpus (will produce 1024 dim. vectors) for English: [options](https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json) and [weights](https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5)
 
 Then edit the file `embedding-registry.json` and modifiy the value for `path` according to the path where you have saved the corresponding embeddings. The embedding files must be unzipped.
 
@@ -96,17 +99,22 @@ Ok, ok, then set the `embedding-lmdb-path` value to `"None"` in the file `embedd
 
 - _BidLSTM-CRF_ with words and characters input following: 
 
-[1] Guillaume Lample, Miguel Ballesteros, Sandeep Subramanian, Kazuya Kawakami, Chris Dyer. "Neural Architectures for Named Entity Recognition". Proceedings of NAACL 2016. https://arxiv.org/abs/1603.01360
+&nbsp;&nbsp;&nbsp;&nbsp; [1] Guillaume Lample, Miguel Ballesteros, Sandeep Subramanian, Kazuya Kawakami, Chris Dyer. "Neural Architectures for Named Entity Recognition". Proceedings of NAACL 2016. https://arxiv.org/abs/1603.01360
 
 
 - _BidLSTM-CNN_ with words, characters and custom casing features input following: 
 
-[2] Jason P. C. Chiu, Eric Nichols. "Named Entity Recognition with Bidirectional LSTM-CNNs". 2016. https://arxiv.org/abs/1511.08308
+&nbsp;&nbsp;&nbsp;&nbsp; [2] Jason P. C. Chiu, Eric Nichols. "Named Entity Recognition with Bidirectional LSTM-CNNs". 2016. https://arxiv.org/abs/1511.08308
 
 
 - _BidLSTM-CNN-CRF_ with words, characters and custom casing features input following: 
 
-[3] Xuezhe Ma and Eduard Hovy. "End-to-end Sequence Labeling via Bi-directional LSTM-CNNs-CRF". 2016. https://arxiv.org/abs/1603.01354
+&nbsp;&nbsp;&nbsp;&nbsp; [3] Xuezhe Ma and Eduard Hovy. "End-to-end Sequence Labeling via Bi-directional LSTM-CNNs-CRF". 2016. https://arxiv.org/abs/1603.01354
+
+
+- the current state of the art (92.22% F1 on CoNLL2003 NER dataset, averaged over five runs), _BidLSTM-CRF_ with [ELMo](https://allennlp.org/elmo) contextualized embeddings: 
+
+&nbsp;&nbsp;&nbsp;&nbsp; [4] Matthew E. Peters, Mark Neumann, Mohit Iyyer, Matt Gardner, Christopher Clark, Kenton Lee, Luke Zettlemoyer. "Deep contextualized word representations". 2018. https://arxiv.org/abs/1802.05365
 
 
 ### Examples
@@ -117,9 +125,13 @@ Different datasets and languages are supported. They can be specified by the com
 
 ##### CONLL 2003
 
-DeLFT comes with a pre-trained model for the CoNLL-2003 NER dataset. By default, the BidLSTM-CRF model is used. With this available model, glove-840B word embeddings, and optimization of hyperparameters, the current f1 score on CoNLL 2003 _testb_ set is __91.35__ (using _train_ set for training and _testa_ for validation), as compared to the 90.94 reported in [1]. f1 score becomes __91.60__ when using both _train_ and _testa_ (validation set) for training, as it is done by (Chiu & Nichols, 2016) or some recent works like (Peters and al., 2017 and 2018).  
+DeLFT comes with a pre-trained model for the CoNLL-2003 NER dataset. 
 
-For re-training a model, the usual CoNLL-2003 NER dataset (`eng.train`, `eng.testa`, `eng.testb`) must be present under `data/sequenceLabelling/CoNLL-2003/` (here a look [here](https://github.com/Franck-Dernoncourt/NeuroNER/tree/master/data/conll2003/en) for instance ;). The CONLL 2003 dataset (English) is the default dataset and English is the default language, but you can also indicate it explicitly as parameter with `--dataset-type conll2003` and specifying explicitly the language `--lang en`.
+By default, the BidLSTM-CRF model is used. With this available model, glove-840B word embeddings, and optimization of hyperparameters, the current f1 score on CoNLL 2003 _testb_ set is __91.35__ (using _train_ set for training and _testa_ for validation), as compared to the 90.94 reported in [1]. f1 score becomes __91.60__ when using both _train_ and _testa_ (validation set) for training, as it is done by (Chiu & Nichols, 2016) or some recent works like (Peters and al., 2017).  
+
+Using BidLSTM-CRF model with ELMo embeddings, following [4], make the predictions 30 times slower but improve the f1 score on CoNLL 2003 currently to __91.65__ (using _train_ set for training and _testa_ for validation), or __92.05__ when training with the validation set (as in the paper Peters and al., 2017).
+
+For re-training a model, the usual CoNLL-2003 NER dataset (`eng.train`, `eng.testa`, `eng.testb`) must be present under `data/sequenceLabelling/CoNLL-2003/` (look [here](https://github.com/Franck-Dernoncourt/NeuroNER/tree/master/data/conll2003/en) for instance ;). The CONLL 2003 dataset (English) is the default dataset and English is the default language, but you can also indicate it explicitly as parameter with `--dataset-type conll2003` and specifying explicitly the language `--lang en`.
 
 For training and evaluating following the traditional approach (training with the train set without validation set, and evaluating on test set), use:
 
@@ -496,15 +508,11 @@ To classify a set of comments:
 > python3 toxicCommentClassifier.py classify
 
 
-#### Twitter 
-
-TBD
-
 #### Citation classification
 
 We use the dataset developed and presented by A. Athar in the following article:
 
-[4] Awais Athar. "Sentiment Analysis of Citations using Sentence Structure-Based Features". Proceedings of the ACL 2011 Student Session, 81-87, 2011. http://www.aclweb.org/anthology/P11-3015
+[5] Awais Athar. "Sentiment Analysis of Citations using Sentence Structure-Based Features". Proceedings of the ACL 2011 Student Session, 81-87, 2011. http://www.aclweb.org/anthology/P11-3015
 
 For a given scientific article, the task is to estimate if the occurrence of a bibliographical citation is positive, neutral or negative given its citation context. Note that the dataset, similarly to the Toxic Comment classification, is highly unbalanced (86% of the citations are neutral). 
 
@@ -595,7 +603,7 @@ Micro-average:
 
 ```
 
-In [4], based on a SVM (linear kernel) and custom features, the author reports a F-score of 0.898 for micro-average and 0.764 for macro-average. As we can observe, a non-linear deep learning approach, even without any feature engineering nor tuning, is very robust for an unbalanced dataset and provides higher accuracy.
+In [5], based on a SVM (linear kernel) and custom features, the author reports a F-score of 0.898 for micro-average and 0.764 for macro-average. As we can observe, a non-linear deep learning approach, even without any feature engineering nor tuning, is very robust for an unbalanced dataset and provides higher accuracy.
 
 To classify a set of citation contexts:
 
@@ -651,7 +659,7 @@ __Models__:
 
 __NER__:
 
-* benchmark with OntoNotes 5 (English and other languages) and French NER
+* benchmark with OntoNotes 5 (English and other languages)
 
 * Align the CoNLL corpus tokenization (CoNLL corpusis "pre-tokenized", but we might not want to follow this tokenization logic)
 

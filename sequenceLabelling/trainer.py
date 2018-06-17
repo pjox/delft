@@ -12,8 +12,8 @@ from sequenceLabelling.evaluation import f1_score, accuracy_score, precision_sco
 import numpy as np
 # seed is fixed for reproducibility
 np.random.seed(7)
-from tensorflow import set_random_seed
-set_random_seed(7)
+import tensorflow as tf
+tf.set_random_seed(7)
 
 class Trainer(object):
 
@@ -90,12 +90,16 @@ class Trainer(object):
 
             callbacks = get_callbacks(log_dir=self.checkpoint_path,
                                       eary_stopping=False)
+        nb_workers = 6
+        if self.embeddings.use_ELMo:
+            nb_workers = 0
+            # dump token context independent data for train set, done once for the training
 
         local_model.fit_generator(generator=training_generator,
-                                    epochs=max_epoch,
-                                    use_multiprocessing=True,
-                                    workers=6,
-                                    callbacks=callbacks)
+                                epochs=max_epoch,
+                                use_multiprocessing=True,
+                                workers=nb_workers,
+                                callbacks=callbacks)
 
         return local_model
 
