@@ -129,7 +129,7 @@ DeLFT comes with a pre-trained model for the CoNLL-2003 NER dataset.
 
 By default, the BidLSTM-CRF model is used. With this available model, glove-840B word embeddings, and optimization of hyperparameters, the current f1 score on CoNLL 2003 _testb_ set is __91.35__ (using _train_ set for training and _testa_ for validation), as compared to the 90.94 reported in [1]. f1 score becomes __91.60__ when using both _train_ and _testa_ (validation set) for training, as it is done by (Chiu & Nichols, 2016) or some recent works like (Peters and al., 2017).  
 
-Using BidLSTM-CRF model with ELMo embeddings, following [4], make the predictions 30 times slower but improve the f1 score on CoNLL 2003 currently to __92.30__ (best model, using _train_ set for training and _testa_ for validation, 91.82 averaged over 10 training), or __92.22__ (best model, 91.93 averaged over 10 training) when training with the validation set (as in the paper Peters and al., 2017).
+Using BidLSTM-CRF model with ELMo embeddings, following [4], make the predictions 30 times slower but improve the f1 score on CoNLL 2003 currently to __92.42__ (best model, using _train_ set for training and _testa_ for validation, 92.22 averaged over 10 training), or __92.56__ (best model, 92.28 averaged over 10 training) when training with the validation set (as in the paper Peters and al., 2017).
 
 For re-training a model, the usual CoNLL-2003 NER dataset (`eng.train`, `eng.testa`, `eng.testb`) must be present under `data/sequenceLabelling/CoNLL-2003/` (look [here](https://github.com/Franck-Dernoncourt/NeuroNER/tree/master/data/conll2003/en) for instance ;). The CONLL 2003 dataset (English) is the default dataset and English is the default language, but you can also indicate it explicitly as parameter with `--dataset-type conll2003` and specifying explicitly the language `--lang en`.
 
@@ -137,7 +137,7 @@ For training and evaluating following the traditional approach (training with th
 
 > python3 nerTagger.py --dataset-type conll2003 train_eval
 
-To use ELMo contextual embeddings, use the parameter `--use-ELMo`. This will slow down considerably (30 times) the first epoch of the training, then the contextual embeddings will be cached and the rest of the training will be similar to usual embeddings in term of trainng time. 
+To use ELMo contextual embeddings, add the parameter `--use-ELMo`. This will slow down considerably (30 times) the first epoch of the training, then the contextual embeddings will be cached and the rest of the training will be similar to usual embeddings in term of trainng time. 
 
 > python3 nerTagger.py --dataset-type conll2003 --use-ELMo train_eval
 
@@ -415,6 +415,10 @@ For applying a model on some examples:
     ]
 }
 ```
+
+Similarly to the NER models, to use ELMo contextual embeddings, add the parameter `--use-ELMo`, e.g.:
+
+> python3 grobidTagger.py citation --use-ELMo train_eval
 
 (To be completed)
 
