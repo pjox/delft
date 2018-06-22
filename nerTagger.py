@@ -83,7 +83,7 @@ def train_eval(embedding_name, dataset_type='conll2003', lang='en', architecture
             # restrict training on train set, use validation set for early stop, as in most papers
             model = sequenceLabelling.Sequence(model_name, 
                                             max_epoch=60, 
-                                            recurrent_dropout=0.50,
+                                            recurrent_dropout=0.5,
                                             embeddings_name=embedding_name, 
                                             early_stop=True, 
                                             fold_number=fold_count,
@@ -95,7 +95,7 @@ def train_eval(embedding_name, dataset_type='conll2003', lang='en', architecture
             # this leads obviously to much higher results (~ +0.5 f1 score)
             model = sequenceLabelling.Sequence(model_name, 
                                             max_epoch=25, 
-                                            recurrent_dropout=0.25,
+                                            recurrent_dropout=0.5,
                                             embeddings_name=embedding_name, 
                                             early_stop=False, 
                                             fold_number=fold_count,
