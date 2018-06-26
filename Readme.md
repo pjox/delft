@@ -6,11 +6,19 @@
 
 __Work in progress !__
 
+<<<<<<< HEAD
 __DeLFT__ (**De**ep **L**earning **F**ramework for **T**ext) is a Keras framework for text processing, covering sequence labelling (e.g. named entity tagging) and text classification (e.g. comment classification). This library re-implements standard state-of-the-art Deep Learning architectures. 
 
 From the observation that most of the open source implementations using Keras are toy examples, our motivation is to develop a framework that can be efficient, scalable and more usable in a production environment (with all the known limitations of Python of course for this purpose). The benefits of DELFT are:
 
 * Re-implement a variety of state-of-the-art deep learning architectures for both sequence labeling and text classification problems, including the usage of the recent [ELMo](https://allennlp.org/elmo) contextualized embeddings, which can all be used within the same environment.
+=======
+__DeLFT__ (**De**ep **L**earning **F**ramework for **T**ext) is a Keras framework for text processing, covering sequence labelling (e.g. named entity tagging) and text classification (e.g. comment classification). This library re-implements standard state-of-the-art Deep Learning architectures.
+
+From the observation that most of the open source implementations using Keras are toy examples, our motivation is to develop a framework that can be efficient, scalable and more usable in a production environment (with all the known limitations of Python of course for this purpose). The benefits of DELFT are:
+
+* Re-implement a variety of state-of-the-art deep learning architectures for both sequence labelling and text classification problems, including the usage of the recent [ELMo](https://allennlp.org/elmo) contextualized embeddings, which can all be used within the same environment. For instance, this allows to reproduce under similar conditions the performance of all recent NER systems.
+>>>>>>> master
 
 * Reduce model size, in particular by removing word embeddings from them. For instance, the model for the toxic comment classifier went down from a size of 230 MB with embeddings to 1.8 MB. In practice the size of all the models of DeLFT is less than 2 MB.
 
@@ -18,9 +26,13 @@ From the observation that most of the open source implementations using Keras ar
 
 * Load and manage efficiently an unlimited volume of pre-trained embedding: instead of loading pre-trained embeddings in memory - which is horribly slow in Python and limits the number of embeddings to be used simultaneously - the pre-trained embeddings are compiled the first time they are accessed and stored efficiently in a LMDB database. This permits to have the pre-trained embeddings immediately "warm" (no load time), to free memory and to use any number of embeddings with a very negligible impact on runtime when using SSD.
 
-The medium term goal is then to provide good performance (accuracy, runtime, compactness) models to a production stack such as Java/Scala and C++. 
+The medium term goal is then to provide good performance (accuracy, runtime, compactness) models to a production stack such as Java/Scala and C++.
 
+<<<<<<< HEAD
 DeLFT has been tested with python 3.5, Keras 2.1 and Tensorflow 1.7+ as backend. At this stage, we do not guarantee that DeLFT will run with other different versions of these libraries or other Keras backend versions. As always, GPU(s) are required for decent training time (GeForce GTX 1050Ti for instance is OK). 
+=======
+DeLFT has been tested with python 3.5, Keras 2.1 and Tensorflow 1.7+ as backend. At this stage, we do not guarantee that DeLFT will run with other different versions of these libraries or other Keras backend versions. As always, GPU(s) are required for decent training time (GeForce GTX 1050Ti for instance is OK).
+>>>>>>> master
 
 ## Install
 
@@ -65,7 +77,7 @@ Then edit the file `embedding-registry.json` and modify the value for `path` acc
             "name": "glove-840B",
             "path": "/PATH/TO/THE/UNZIPPED/EMBEDDINGS/FILE/glove.840B.300d.txt",
             "type": "glove",
-            "format": "vec", 
+            "format": "vec",
             "lang": "en",
             "item": "word"
         },
@@ -81,13 +93,21 @@ You're ready to use DeLFT.
 
 The first time DeLFT starts and accesses pre-trained embeddings, these embeddings are serialized and stored in a LMDB database, a very efficient embedded database using memory page (already used in the Machine Learning world by Caffe and Torch for managing large training data). The next time these embeddings will be accessed, they will be immediately available.
 
+<<<<<<< HEAD
 Our approach solves the bottleneck problem pointed for instance [here](https://spenai.org/bravepineapple/faster_em/) in a much better way than quantizing+compression or pruning. After being compiled and stored at the first access, any volume of embeddings vectors can be used immediatly without any loading, with a negligible usage of memory, without any accuracy loss and with a negligible impact on runtime when using SSD.
+=======
+Our approach solves the bottleneck problem pointed for instance [here](https://spenai.org/bravepineapple/faster_em/) in a much better way than quantizing+compression or pruning. After being compiled and stored at the first access, any volume of embeddings vectors can be used immediately without any loading, with a negligible usage of memory, without any accuracy loss and with a negligible impact on runtime when using SSD.
+>>>>>>> master
 
 For instance, in a traditional approach `glove-840B` takes around 2 minutes to load and 4GB in memory. Managed with LMDB, after a first load time of around 4 minutes, `glove-840B` can be accessed immediately and takes only a couple MB in memory, for an impact on runtime negligible (around 1% slower) for any further command line calls.
 
 By default, the LMDB databases are stored under the subdirectory `data/db`. The size of a database is roughly equivalent to the size of the original uncompressed embeddings file. To modify this path, edit the file `embedding-registry.json` and change the value of the attribute `embedding-lmdb-path`.
 
+<<<<<<< HEAD
 > I have plenty of memory on my machine, I don't care about load time because I need to grab a coffee, I only process one language at the time, so I am not interested in taking advantage of the LMDB emebedding management ! 
+=======
+> I have plenty of memory on my machine, I don't care about load time because I need to grab a coffee, I only process one language at the time, so I am not interested in taking advantage of the LMDB emebedding management !
+>>>>>>> master
 
 Ok, ok, then set the `embedding-lmdb-path` value to `"None"` in the file `embedding-registry.json`, the embeddings will be loaded in memory as immutable data, like in the usual Keras scripts.
 
@@ -95,6 +115,7 @@ Ok, ok, then set the `embedding-lmdb-path` value to `"None"` in the file `embedd
 
 ### Available models
 
+<<<<<<< HEAD
 * _BidLSTM-CRF_ with words and characters input following: 
 
 &nbsp;&nbsp;&nbsp;&nbsp; [1] Guillaume Lample, Miguel Ballesteros, Sandeep Subramanian, Kazuya Kawakami, Chris Dyer. "Neural Architectures for Named Entity Recognition". Proceedings of NAACL 2016. https://arxiv.org/abs/1603.01360
@@ -111,6 +132,26 @@ Ok, ok, then set the `embedding-lmdb-path` value to `"None"` in the file `embedd
 
 &nbsp;&nbsp;&nbsp;&nbsp; [4] Matthew E. Peters, Mark Neumann, Mohit Iyyer, Matt Gardner, Christopher Clark, Kenton Lee, Luke Zettlemoyer. "Deep contextualized word representations". 2018. https://arxiv.org/abs/1802.05365
 
+=======
+* _BidLSTM-CRF_ with words and characters input following:
+
+&nbsp;&nbsp;&nbsp;&nbsp; [1] Guillaume Lample, Miguel Ballesteros, Sandeep Subramanian, Kazuya Kawakami, Chris Dyer. "Neural Architectures for Named Entity Recognition". Proceedings of NAACL 2016. https://arxiv.org/abs/1603.01360
+
+* _BidLSTM-CNN_ with words, characters and custom casing features input, see:
+
+&nbsp;&nbsp;&nbsp;&nbsp; [2] Jason P. C. Chiu, Eric Nichols. "Named Entity Recognition with Bidirectional LSTM-CNNs". 2016. https://arxiv.org/abs/1511.08308
+
+* _BidLSTM-CNN-CRF_ with words, characters and custom casing features input following:
+
+&nbsp;&nbsp;&nbsp;&nbsp; [3] Xuezhe Ma and Eduard Hovy. "End-to-end Sequence Labelling via Bi-directional LSTM-CNNs-CRF". 2016. https://arxiv.org/abs/1603.01354
+
+* the current state of the art (92.22% F1 on CoNLL2003 NER dataset, averaged over five runs), _BidLSTM-CRF_ with [ELMo](https://allennlp.org/elmo) contextualized embeddings, see:
+
+&nbsp;&nbsp;&nbsp;&nbsp; [4] Matthew E. Peters, Mark Neumann, Mohit Iyyer, Matt Gardner, Christopher Clark, Kenton Lee, Luke Zettlemoyer. "Deep contextualized word representations". 2018. https://arxiv.org/abs/1802.05365
+
+Note that all our annotation data for sequence labelling follows the [IOB2](https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging)) scheme.
+
+>>>>>>> master
 ### Examples
 
 #### NER
@@ -119,11 +160,19 @@ Different datasets and languages are supported. They can be specified by the com
 
 ##### CONLL 2003
 
+<<<<<<< HEAD
 DeLFT comes with a pre-trained model for the CoNLL-2003 NER dataset.
+=======
+DeLFT comes with various pre-trained models with the CoNLL-2003 NER dataset.
+>>>>>>> master
 
-By default, the BidLSTM-CRF model is used. With this available model, glove-840B word embeddings, and optimization of hyperparameters, the current f1 score on CoNLL 2003 _testb_ set is __91.35__ (best run over 10 training, using _train_ set for training and _testa_ for validation), as compared to the 90.94 reported in [1]. f1 score becomes __91.60__ when using both _train_ and _testa_ (validation set) for training (best run over 10 training), as it is done by (Chiu & Nichols, 2016) or some recent works like (Peters and al., 2017).  
+By default, the BidLSTM-CRF architecture is used. With this available model, glove-840B word embeddings, and optimization of hyperparameters, the current f1 score on CoNLL 2003 _testb_ set is __91.35__ (best run over 10 training, using _train_ set for training and _testa_ for validation), as compared to the 90.94 reported in [1]. f1 score becomes __91.60__ when using both _train_ and _testa_ (validation set) for training (best run over 10 training), as it is done by (Chiu & Nichols, 2016) or some recent works like (Peters and al., 2017).  
 
+<<<<<<< HEAD
 Using BidLSTM-CRF model with ELMo embeddings, following [4] and some parameter optimizations and [warming](https://github.com/allenai/allennlp/blob/master/tutorials/how_to/elmo.md#notes-on-statefulness-and-non-determinism), make the predictions 30 times slower but improve the f1 score on CoNLL 2003 currently to __92.73__ (best model, using _train_ set for training and _testa_ for validation, __92.40__ averaged over 20 training), or __93.09__ (best model, __92.69__ averaged over 10 training) when training with the validation set (as in the paper Peters and al., 2017).
+=======
+Using BidLSTM-CRF model with ELMo embeddings, following [4] and some parameter optimizations and [warm-up](https://github.com/allenai/allennlp/blob/master/tutorials/how_to/elmo.md#notes-on-statefulness-and-non-determinism), make the predictions 30 times slower but improve the f1 score on CoNLL 2003 currently to __92.61__ (best model, using _train_ set for training and _testa_ for validation, __92.47__ averaged over 10 training), or __93.09__ (best model, __92.69__ averaged over 10 training) when training with the validation set (as in the paper Peters and al., 2017).
+>>>>>>> master
 
 For re-training a model, the usual CoNLL-2003 NER dataset (`eng.train`, `eng.testa`, `eng.testb`) must be present under `data/sequenceLabelling/CoNLL-2003/` (look [here](https://github.com/Franck-Dernoncourt/NeuroNER/tree/master/data/conll2003/en) for instance ;). The CONLL 2003 dataset (English) is the default dataset and English is the default language, but you can also indicate it explicitly as parameter with `--dataset-type conll2003` and specifying explicitly the language `--lang en`.
 
@@ -180,7 +229,7 @@ For training with all the available data:
 
 To take into account the strong impact of random seed, you can also train multiple times with the n-folds options. The model will be trained n times with different seed values but with the same sets if the evaluation set is provided. The evaluation will then give the average scores over these n models (against test set) and for the best model which will be saved. For 10 times training for instance, use:
 
-> python3 nerTagger.py --dataset-type conll2003 --fold-count 10 train_eval 
+> python3 nerTagger.py --dataset-type conll2003 --fold-count 10 train_eval
 
 After training a model, for tagging some text, use the command:
 
@@ -242,10 +291,49 @@ If you have trained the model with ELMo, you need to indicate to use ELMo-based 
 
 > python3 nerTagger.py --dataset-type conll2003 --use-ELMo tag
 
+##### Ontonotes 5.0 CONLL 2012
+
+DeLFT comes with pre-trained models with the [Ontonotes 5.0 CoNLL-2012 NER dataset](http://cemantix.org/data/ontonotes.html). As dataset-type identifier, use `conll2012`. All the options valid for CoNLL-2003 NER dataset are usable for this dataset.
+
+With the default BidLSTM-CRF architecture and without any parameter tuning, f1 score of the provided model is __85.85__ when trained with the train set strictly. When trained with validation set, f1 score of the provided model is __86.41__.
+
+For training and evaluating following the traditional approach (training with the train set without validation set, and evaluating on test set), use:
+
+> python3 nerTagger.py --dataset-type conll2012 train_eval
+
+```text
+    training runtime: 12804.685 seconds
+
+    Evaluation on test set:
+        f1 (micro): 85.85
+                 precision    recall  f1-score   support
+
+            ORG     0.8534    0.8563    0.8548      1795
+        ORDINAL     0.8111    0.9026    0.8544       195
+          EVENT     0.4571    0.5079    0.4812        63
+    WORK_OF_ART     0.6484    0.5000    0.5646       166
+          MONEY     0.8795    0.8599    0.8696       314
+           DATE     0.8087    0.8552    0.8313      1602
+       LANGUAGE     0.7273    0.3636    0.4848        22
+            LOC     0.7158    0.7318    0.7238       179
+            GPE     0.9528    0.9281    0.9403      2240
+       QUANTITY     0.6598    0.6095    0.6337       105
+         PERSON     0.9117    0.9145    0.9131      1988
+            FAC     0.5192    0.4000    0.4519       135
+           NORP     0.9240    0.9394    0.9316       841
+            LAW     0.6786    0.4750    0.5588        40
+        PRODUCT     0.6866    0.6053    0.6434        76
+       CARDINAL     0.7958    0.8043    0.8000       935
+           TIME     0.5880    0.5991    0.5935       212
+        PERCENT     0.8827    0.8625    0.8725       349
+
+    avg / total     0.8592    0.8579    0.8585     11257
+
+```
 
 ##### French model (based on Le Monde corpus)
 
-Note that Le Monde corpus is subject to copyrights and is limited to research usage only. This is the default French model, so it will be used by simply indicating the language as parameter: `--lang fr`, but you can also indicate explicitly the dataset with `--dataset-type lemonde`. 
+Note that Le Monde corpus is subject to copyrights and is limited to research usage only. This is the default French model, so it will be used by simply indicating the language as parameter: `--lang fr`, but you can also indicate explicitly the dataset with `--dataset-type lemonde`.
 
 Similarly as before, for training and evaluating use:
 
@@ -280,7 +368,11 @@ and for annotating some examples:
 
 > python3 nerTagger.py --lang fr tag
 
+<<<<<<< HEAD
 ```text
+=======
+```json
+>>>>>>> master
 {
     "date": "2018-06-11T21:25:03.321818",
     "runtime": 0.511,
@@ -319,7 +411,7 @@ This above work is licensed under a [Creative Commons Attribution-Noncommercial 
 
 #### GROBID models
 
-DeLFT supports [GROBID](https://github.com/kermitt2/grobid) training data (originally for CRF) and GROBID feature matrix to be labelled. 
+DeLFT supports [GROBID](https://github.com/kermitt2/grobid) training data (originally for CRF) and GROBID feature matrix to be labelled.
 
 Train a model:
 
@@ -429,7 +521,7 @@ Example of a small tagging test:
 
 > python3 insultTagger.py tag
 
-will produced (__socially offensive language warning!__) result like this: 
+will produced (__socially offensive language warning!__) result like this:
 
 ```json
 {
@@ -644,12 +736,13 @@ which will produce some JSON output like this:
 
 ```
 
-
 ## TODO
 
 __Embeddings__:
 
 * use/experiment more with OOV mechanisms
+
+* train decent French embeddings (Glove and ELMo)
 
 __Models__:
 
@@ -659,7 +752,7 @@ __Models__:
 
 __NER__:
 
-* benchmark with OntoNotes 5 (English and other languages)
+* benchmark with OntoNotes 5 - other languages
 
 * Align the CoNLL corpus tokenization (CoNLL corpusis "pre-tokenized", but we might not want to follow this tokenization logic)
 
@@ -672,7 +765,6 @@ __Build more models and examples__...
 * model for entity disambiguation
 
 * dependency parser
-
 
 ## Acknowledgments
 
