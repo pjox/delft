@@ -1,6 +1,6 @@
 import os
 from sequenceLabelling.data_generator import DataGenerator
-from keras.optimizers import Adam, Nadam
+from keras.optimizers import Adam
 from keras.callbacks import Callback, TensorBoard, EarlyStopping, ModelCheckpoint
 from keras.utils import plot_model
 
@@ -49,7 +49,7 @@ class Trainer(object):
         
         if self.model_config.use_crf:
             self.model.compile(loss=self.model.crf.loss,
-                           optimizer='nadam')
+                           optimizer='adam')
         else:
             self.model.compile(loss='categorical_crossentropy',
                            optimizer='adam')
