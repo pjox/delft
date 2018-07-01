@@ -34,7 +34,7 @@
         },
         {
             "name": "wiki.fr",
-            "path": "/home/lopez/embeddings/wiki.fr.vec",
+            "path": "/scratch/portizsu/delft/data/embeddings/wiki.fr.vec",
             "type": "fasttext",
             "format": "vec", 
             "lang": "fr",
