@@ -13,8 +13,11 @@ import time
 # produce some statistics
 def stats(x_train=None, y_train=None, x_valid=None, y_valid=None, x_eval=None, y_eval=None):
     charset = []
+    nb_total_sequences = 0
+    nb_total_tokens = 0
     if x_train is not None:
         print(len(x_train), 'train sequences')
+        nb_total_sequences += len(x_train)
         nb_tokens = 0
         for sentence in x_train:
             nb_tokens += len(sentence)
@@ -23,6 +26,7 @@ def stats(x_train=None, y_train=None, x_valid=None, y_valid=None, x_eval=None, y
                     if not character in charset:
                         charset.append(character)
         print("\t","nb. tokens", nb_tokens)
+        nb_total_tokens += nb_tokens
     if y_train is not None:
         nb_entities = 0
         for labels in y_train:
@@ -32,6 +36,7 @@ def stats(x_train=None, y_train=None, x_valid=None, y_valid=None, x_eval=None, y
         print("\t","with nb. entities", nb_entities)
     if x_valid is not None:
         print(len(x_valid), 'validation sequences')
+        nb_total_sequences += len(x_valid)
         nb_tokens = 0
         for sentence in x_valid:
             nb_tokens += len(sentence)
@@ -40,6 +45,7 @@ def stats(x_train=None, y_train=None, x_valid=None, y_valid=None, x_eval=None, y
                     if not character in charset:
                         charset.append(character)
         print("\t","nb. tokens", nb_tokens)
+        nb_total_tokens += nb_tokens
     if y_valid is not None:
         nb_entities = 0
         for labels in y_valid:
@@ -49,6 +55,7 @@ def stats(x_train=None, y_train=None, x_valid=None, y_valid=None, x_eval=None, y
         print("\t","with nb. entities", nb_entities)
     if x_eval is not None:
         print(len(x_eval), 'evaluation sequences')
+        nb_total_sequences += len(x_eval)
         nb_tokens = 0
         for sentence in x_eval:
             nb_tokens += len(sentence)
@@ -57,6 +64,7 @@ def stats(x_train=None, y_train=None, x_valid=None, y_valid=None, x_eval=None, y
                     if not character in charset:
                         charset.append(character)
         print("\t","nb. tokens", nb_tokens)
+        nb_total_tokens += nb_tokens
     if y_eval is not None:
         nb_entities = 0
         for labels in y_eval:
@@ -65,7 +73,12 @@ def stats(x_train=None, y_train=None, x_valid=None, y_valid=None, x_eval=None, y
                     nb_entities += 1
         print("\t","with nb. entities", nb_entities)
 
+    print("\n")
+    print(nb_total_sequences, "total sequences")
+    print(nb_total_tokens, "total tokens\n")
+
     print("total distinct characters:", len(charset), "\n")
+    #print(charset)
 
 
 # train a model with all available CoNLL 2003 data 
@@ -75,12 +88,14 @@ def train(embedding_name, dataset_type='conll2003', lang='en', architecture='Bid
         print('Loading data...')
         x_train1, y_train1 = load_data_and_labels_conll('data/sequenceLabelling/CoNLL-2003/eng.train')
         x_train2, y_train2 = load_data_and_labels_conll('data/sequenceLabelling/CoNLL-2003/eng.testa')
+        x_train3, y_train3 = load_data_and_labels_conll('data/sequenceLabelling/CoNLL-2003/eng.testb')
 
-        # we concatenate train and valid sets
-        x_train = np.concatenate((x_train1, x_train2), axis=0)
-        y_train = np.concatenate((y_train1, y_train2), axis=0)
+        # we concatenate all sets
+        x_all = np.concatenate((x_train1, x_train2, x_train3), axis=0)
+        y_all = np.concatenate((y_train1, y_train2, y_train3), axis=0)
 
-        x_valid, y_valid = load_data_and_labels_conll('data/sequenceLabelling/CoNLL-2003/eng.testb')
+        # split train and valid sets in a random way
+        x_train, x_valid, y_train, y_valid = train_test_split(x_all, y_all, test_size=0.1)
         stats(x_train, y_train, x_valid, y_valid)
 
         model_name = 'ner-en-conll2003'
@@ -98,12 +113,14 @@ def train(embedding_name, dataset_type='conll2003', lang='en', architecture='Bid
 
         x_train1, y_train1 = load_data_and_labels_conll('data/sequenceLabelling/CoNLL-2012-NER/eng.train')
         x_train2, y_train2 = load_data_and_labels_conll('data/sequenceLabelling/CoNLL-2012-NER/eng.dev')
+        x_train3, y_train3 = load_data_and_labels_conll('data/sequenceLabelling/CoNLL-2012-NER/eng.test')
 
         # we concatenate train and valid sets
-        x_train = np.concatenate((x_train1, x_train2), axis=0)
-        y_train = np.concatenate((y_train1, y_train2), axis=0)
+        x_all = np.concatenate((x_train1, x_train2, x_train3), axis=0)
+        y_all = np.concatenate((y_train1, y_train2, t_train3), axis=0)
 
-        x_eval, y_eval = load_data_and_labels_conll('data/sequenceLabelling/CoNLL-2012-NER/eng.test')
+        # split train and valid sets in a random way
+        x_train, x_valid, y_train, y_valid = train_test_split(x_all, y_all, test_size=0.1)
         stats(x_train, y_train, x_valid, y_valid)
 
         model_name = 'ner-en-conll2012'
