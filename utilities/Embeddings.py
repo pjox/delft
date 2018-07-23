@@ -445,9 +445,9 @@ class Embeddings(object):
         """
             Get static embeddings (e.g. glove) for a given token
         """
-        if (self.name == 'wiki.fr') or (self.name == 'wiki.fr.bin'):
+        #if (self.name == 'wiki.fr') or (self.name == 'wiki.fr.bin'):
             # the pre-trained embeddings are not cased
-            word = word.lower()
+            #word = word.lower()
         if self.env is None:
             # db not available, the embeddings should be available in memory (normally!)
             return self.get_word_vector_in_memory(word)
@@ -544,9 +544,9 @@ class Embeddings(object):
             os.rmdir(self.embedding_ELMo_cache)
 
     def get_word_vector_in_memory(self, word):
-        if (self.name == 'wiki.fr') or (self.name == 'wiki.fr.bin'):
+        #if (self.name == 'wiki.fr') or (self.name == 'wiki.fr.bin'):
             # the pre-trained embeddings are not cased
-            word = word.lower()
+            #word = word.lower()
         if word in self.model:
             return self.model[word]
         else:
