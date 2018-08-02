@@ -291,7 +291,7 @@ def eval(dataset_type='conll2003',
 
     if (dataset_type == 'conll2003') and (lang == 'en'):
         print('Loading CoNLL-2003 NER data...')
-        x_test, y_test = load_data_and_labels_conll('data/sequenceLabelling/CoNLL-2003/eng.testb')
+        x_test, y_test = load_data_and_labels_conll('data/sequenceLabelling/CoNLL-2003/eng.testa')
         stats(x_eval=x_test, y_eval=y_test)
 
         # load model
@@ -409,7 +409,7 @@ if __name__ == "__main__":
     # be sure to use here the same name as in the registry ('glove-840B', 'fasttext-crawl', 'word2vec'), 
     # and that the path in the registry to the embedding file is correct on your system
     if lang == 'en':
-        embeddings_name = "glove-840B"
+        embeddings_name = "fasttext-crawl"
     elif lang == 'fr':
         embeddings_name = 'wiki.fr'
 

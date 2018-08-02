@@ -10,7 +10,7 @@
         },
         {
             "name": "fasttext-crawl",
-            "path": "/scratch/portizsu/delft/data/embeddings/crawl-300d-2M.vec",
+            "path": "/scratch/portizsu/delft/data/embeddings/crawl-300d-2M-new.vec",
             "type": "fasttext",
             "format": "vec", 
             "lang": "en",
