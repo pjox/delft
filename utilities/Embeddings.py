@@ -15,6 +15,9 @@ import mmap
 import tensorflow as tf
 import keras.backend as K
 
+# for fasttext binary embeddings
+from pyfasttext import FastText
+
 # for ELMo embeddings
 from utilities.bilm.data import Batcher, TokenBatcher
 from utilities.bilm.model import BidirectionalLanguageModel, dump_token_embeddings
@@ -87,31 +90,36 @@ class Embeddings(object):
             embeddings_type = description["type"]
             self.lang = description["lang"]
             print("path:", embeddings_path)
-            if embeddings_type == "glove":
-                hasHeader = False
-            with open(embeddings_path) as f:
-                for line in f:
-                    line = line.strip()
-                    line = line.split(' ')
-                    if begin:
-                        if hasHeader:
-                            # first line gives the nb of words and the embedding size
-                            nbWords = int(line[0])
-                            self.embed_size = int(line[1].replace("\n", ""))
-                            begin = False
-                            continue
-                        else:
-                            begin = False
-                    word = line[0]
-                    #if embeddings_type == 'glove':
-                    vector = np.array([float(val) for val in line[1:len(line)]], dtype='float32')
-                    #else:
-                    #    vector = np.array([float(val) for val in line[1:len(line)-1]], dtype='float32')
-                    if self.embed_size == 0:
-                        self.embed_size = len(vector)
-                    self.model[word] = vector
-            if nbWords == 0:
-                nbWords = len(self.model)
+            if self.name == 'frmix.bin':
+                self.model = FastText(embeddings_path)
+                nbWords = self.model.nwords
+                self.embed_size = 300
+            else:
+                if embeddings_type == "glove":
+                    hasHeader = False
+                with open(embeddings_path) as f:
+                    for line in f:
+                        line = line.strip()
+                        line = line.split(' ')
+                        if begin:
+                            if hasHeader:
+                                # first line gives the nb of words and the embedding size
+                                nbWords = int(line[0])
+                                self.embed_size = int(line[1].replace("\n", ""))
+                                begin = False
+                                continue
+                            else:
+                                begin = False
+                        word = line[0]
+                        #if embeddings_type == 'glove':
+                        vector = np.array([float(val) for val in line[1:len(line)]], dtype='float32')
+                        #else:
+                        #    vector = np.array([float(val) for val in line[1:len(line)-1]], dtype='float32')
+                        if self.embed_size == 0:
+                            self.embed_size = len(vector)
+                        self.model[word] = vector
+                if nbWords == 0:
+                    nbWords = len(self.model)
             print('embeddings loaded for', nbWords, "words and", self.embed_size, "dimensions")
 
     
@@ -545,6 +553,8 @@ class Embeddings(object):
             os.rmdir(self.embedding_ELMo_cache)
 
     def get_word_vector_in_memory(self, word):
+        if self.name == 'frmix.bin':
+                return self.model.get_numpy_vector(word)
         if (self.name == 'wiki.fr') or (self.name == 'wiki.fr.bin'):
             # the pre-trained embeddings are not cased
             word = word.lower()

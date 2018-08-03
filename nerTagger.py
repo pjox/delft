@@ -411,7 +411,7 @@ if __name__ == "__main__":
     if lang == 'en':
         embeddings_name = "fasttext-crawl"
     elif lang == 'fr':
-        embeddings_name = 'wiki.fr'
+        embeddings_name = 'frmix'
 
     if action == 'train':
         train(embeddings_name, 
