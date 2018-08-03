@@ -90,7 +90,7 @@ class Embeddings(object):
             embeddings_type = description["type"]
             self.lang = description["lang"]
             print("path:", embeddings_path)
-            if self.name == 'frmix.bin':
+            if self.name == 'frmix':
                 self.model = FastText(embeddings_path)
                 nbWords = self.model.nwords
                 self.embed_size = 300
@@ -553,7 +553,7 @@ class Embeddings(object):
             os.rmdir(self.embedding_ELMo_cache)
 
     def get_word_vector_in_memory(self, word):
-        if self.name == 'frmix.bin':
+        if self.name == 'frmix':
                 return self.model.get_numpy_vector(word)
         if (self.name == 'wiki.fr') or (self.name == 'wiki.fr.bin'):
             # the pre-trained embeddings are not cased
