@@ -200,6 +200,9 @@ class Embeddings(object):
         if self.embedding_lmdb_path is None or self.embedding_lmdb_path == "None":
             print("embedding_lmdb_path is not specified in the embeddings registry, so the embeddings will be loaded in memory...")
             self.make_embeddings_simple_in_memory(name, hasHeader)
+        elif self.extension == "bin":
+            print("embedding is of format .bin, so it will be loaded in memory...")
+            self.make_embeddings_simple_in_memory(name, hasHeader)
         else:    
             # check if the lmdb database exists
             envFilePath = os.path.join(self.embedding_lmdb_path, name)
