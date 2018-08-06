@@ -38,7 +38,7 @@ ELMo_embed_size = 1024
 
 class Embeddings(object):
 
-    def __init__(self, name, path='./embedding-registry.json', lang='en', use_ELMo=False):
+    def __init__(self, name, path='./embedding-registry.json', lang='en', extension='vec', use_ELMo=False):
         self.name = name
         self.embed_size = 0
         self.static_embed_size = 0
@@ -46,6 +46,7 @@ class Embeddings(object):
         self.model = {}
         self.registry = self._load_embedding_registry(path)
         self.lang = lang
+        self.extension = extension
         self.embedding_lmdb_path = None
         if self.registry is not None:
             self.embedding_lmdb_path = self.registry["embedding-lmdb-path"]
@@ -89,8 +90,9 @@ class Embeddings(object):
             embeddings_path = description["path"]
             embeddings_type = description["type"]
             self.lang = description["lang"]
+            self.extension = description["format"]
             print("path:", embeddings_path)
-            if self.name == 'frmix':
+            if self.extension == 'bin':
                 self.model = FastText(embeddings_path)
                 nbWords = self.model.nwords
                 self.embed_size = 300
@@ -553,7 +555,7 @@ class Embeddings(object):
             os.rmdir(self.embedding_ELMo_cache)
 
     def get_word_vector_in_memory(self, word):
-        if self.name == 'frmix':
+        if self.extension == 'bin':
                 return self.model.get_numpy_vector(word)
         if (self.name == 'wiki.fr') or (self.name == 'wiki.fr.bin'):
             # the pre-trained embeddings are not cased
