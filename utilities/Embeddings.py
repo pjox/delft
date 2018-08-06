@@ -90,7 +90,6 @@ class Embeddings(object):
             embeddings_path = description["path"]
             embeddings_type = description["type"]
             self.lang = description["lang"]
-            self.extension = description["format"]
             print("path:", embeddings_path)
             if self.extension == 'bin':
                 self.model = FastText(embeddings_path)
@@ -197,6 +196,10 @@ class Embeddings(object):
 
 
     def make_embeddings_simple(self, name="fasttext-crawl", hasHeader=True):
+        description = self._get_description(name)
+        if description is not None:
+            self.extension = description["format"]
+
         if self.embedding_lmdb_path is None or self.embedding_lmdb_path == "None":
             print("embedding_lmdb_path is not specified in the embeddings registry, so the embeddings will be loaded in memory...")
             self.make_embeddings_simple_in_memory(name, hasHeader)
