@@ -42,7 +42,7 @@
         },
         {
             "name": "frmix",
-            "path": "/scratch/portizsu/delft/data/embeddings/frmix.bin",
+            "path": "/scratch/portizsu/delft-testing/data/embeddings/frSkipLong.bin",
             "type": "fasttext",
             "format": "bin", 
             "lang": "fr",

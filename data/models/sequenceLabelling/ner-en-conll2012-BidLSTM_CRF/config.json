@@ -1,7 +1,7 @@
 {
     "model_name": "ner-en-conll2012-BidLSTM_CRF",
     "model_type": "BidLSTM_CRF",
-    "embeddings_name": "glove-840B",
+    "embeddings_name": "fasttext-crawl",
     "char_vocab_size": 116,
     "case_vocab_size": 8,
     "char_embedding_size": 25,
@@ -14,7 +14,7 @@
     "recurrent_dropout": 0.5,
     "use_char_feature": true,
     "use_crf": true,
-    "fold_number": 1,
+    "fold_number": 10,
     "batch_size": 20,
     "use_ELMo": false
 }
