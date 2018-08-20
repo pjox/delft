@@ -52,7 +52,7 @@ You need then to download some pre-trained word embeddings and notify their path
 
 * _word2vec GoogleNews_ (3M vocab., cased, 300 dim. vectors): [word2vec](https://drive.google.com/file/d/0B7XkCwpI5KDYNlNUTTlSS21pQmM/edit?usp=sharing)
 
-* _fasttext_wiki_fr_ (1.1M, NOT case, 300 dim. vectors) for French: [wiki.fr](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.fr.vec)
+* _fasttext_wiki_fr_ (1.1M, NOT cased, 300 dim. vectors) for French: [wiki.fr](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.fr.vec)
 
 * _ELMo_ trained on 5.5B word corpus (will produce 1024 dim. vectors) for English: [options](https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json) and [weights](https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5)
 
@@ -81,11 +81,13 @@ You're ready to use DeLFT.
 
 The first time DeLFT starts and accesses pre-trained embeddings, these embeddings are serialised and stored in a LMDB database, a very efficient embedded database using memory page (already used in the Machine Learning world by Caffe and Torch for managing large training data). The next time these embeddings will be accessed, they will be immediately available.
 
-Our approach solves the bottleneck problem pointed for instance [here](https://spenai.org/bravepineapple/faster_em/) in a much better way than quantising+compression or pruning. After being compiled and stored at the first access, any volume of embeddings vectors can be used immediately without any loading, with a negligible usage of memory, without any accuracy loss and with a negligible impact on runtime when using SSD.
+Our approach solves the bottleneck problem pointed for instance [here](https://spenai.org/bravepineapple/faster_em/) in a much better way than quantising+compression or pruning. After being compiled and stored at the first access, any volume of embeddings vectors can be used immediately without any loading, with a negligible usage of memory, without any accuracy loss and with a negligible impact on runtime when using SSD. In practice, we can exploit for instance embeddings for dozen languages simultaneously, without any memory and runtime issues - a requirement for any ambitious industrial deployment of a neural NLP system. 
 
 For instance, in a traditional approach `glove-840B` takes around 2 minutes to load and 4GB in memory. Managed with LMDB, after a first load time of around 4 minutes, `glove-840B` can be accessed immediately and takes only a couple MB in memory, for an impact on runtime negligible (around 1% slower) for any further command line calls.
 
 By default, the LMDB databases are stored under the subdirectory `data/db`. The size of a database is roughly equivalent to the size of the original uncompressed embeddings file. To modify this path, edit the file `embedding-registry.json` and change the value of the attribute `embedding-lmdb-path`.
+
+While FastText .bin format are supported by DeLFT (including using ngrams for OOV words), this format will be loaded entirely in memory and does not take advantage of our memory-efficient management of embeddings. 
 
 > I have plenty of memory on my machine, I don't care about load time because I need to grab a coffee, I only process one language at the time, so I am not interested in taking advantage of the LMDB emebedding management !
 
@@ -304,46 +306,42 @@ If you have trained the model with ELMo, you need to indicate to use ELMo-based 
 
 DeLFT comes with pre-trained models with the [Ontonotes 5.0 CoNLL-2012 NER dataset](http://cemantix.org/data/ontonotes.html). As dataset-type identifier, use `conll2012`. All the options valid for CoNLL-2003 NER dataset are usable for this dataset.
 
-With the default BidLSTM-CRF architecture and without any parameter tuning, f1 score of the provided model is __86.17__ when trained with the train set strictly. When trained with validation set, f1 score of the provided model is __86.55__.
+With the default BidLSTM-CRF architecture, FastText embeddings and without any parameter tuning, f1 score of the provided model is __87.01__ (best run over 10 trainings, 86.65 averaged over these 10 trainings) when trained with the train set strictly. When trained with validation set and Glove embeddings, f1 score of the provided model is __86.55__.
 
-For re-training, the assembled Ontonotes datasets following CoNLL-2012 must be available and converted into IOB2 tagging scheme, see [here](https://github.com/kermitt2/delft/tree/master/utilities) for more details. To train and evaluate following the traditional approach (training with the train set without validation set, and evaluating on test set)Then, use:
+For re-training, the assembled Ontonotes datasets following CoNLL-2012 must be available and converted into IOB2 tagging scheme, see [here](https://github.com/kermitt2/delft/tree/master/utilities) for more details. To train and evaluate following the traditional approach (training with the train set without validation set, and evaluating on test set), use:
 
 > python3 nerTagger.py --dataset-type conll2012 train_eval
 
 ```text
-    training runtime: 7969.122 seconds 
+Evaluation on test set:
+	f1 (micro): 87.01
+                  precision    recall  f1-score   support
 
-    Evaluation on test set:
-        f1 (micro): 86.17
-                 precision    recall  f1-score   support
+            DATE     0.8029    0.8695    0.8349      1602
+        CARDINAL     0.8130    0.8139    0.8135       935
+          PERSON     0.9061    0.9371    0.9214      1988
+             GPE     0.9617    0.9411    0.9513      2240
+             ORG     0.8799    0.8568    0.8682      1795
+           MONEY     0.8903    0.8790    0.8846       314
+            NORP     0.9226    0.9501    0.9361       841
+         ORDINAL     0.7873    0.8923    0.8365       195
+            TIME     0.5772    0.6698    0.6201       212
+     WORK_OF_ART     0.6000    0.5060    0.5490       166
+             LOC     0.7340    0.7709    0.7520       179
+           EVENT     0.5000    0.5556    0.5263        63
+         PRODUCT     0.6528    0.6184    0.6351        76
+         PERCENT     0.8717    0.8567    0.8642       349
+        QUANTITY     0.7155    0.7905    0.7511       105
+             FAC     0.7167    0.6370    0.6745       135
+        LANGUAGE     0.8462    0.5000    0.6286        22
+             LAW     0.7308    0.4750    0.5758        40
 
-       QUANTITY     0.7321    0.7810    0.7558       105
-          EVENT     0.6275    0.5079    0.5614        63
-           NORP     0.9193    0.9215    0.9204       841
-       CARDINAL     0.8294    0.7487    0.7870       935
-        ORDINAL     0.7982    0.9128    0.8517       195
-            ORG     0.8451    0.8635    0.8542      1795
-       LANGUAGE     0.7059    0.5455    0.6154        22
-           TIME     0.6000    0.5943    0.5972       212
-        PRODUCT     0.7333    0.5789    0.6471        76
-            FAC     0.6630    0.4519    0.5374       135
-           DATE     0.8015    0.8571    0.8284      1602
-          MONEY     0.8714    0.8631    0.8672       314
-            LAW     0.6786    0.4750    0.5588        40
-        PERCENT     0.8808    0.8682    0.8745       349
-    WORK_OF_ART     0.6480    0.4880    0.5567       166
-            LOC     0.7500    0.7709    0.7603       179
-            GPE     0.9494    0.9388    0.9441      2240
-         PERSON     0.9038    0.9306    0.9170      1988
-
-    avg / total     0.8618    0.8615    0.8617     11257
-
+all (micro avg.)     0.8647    0.8755    0.8701     11257
 ```
 
 For ten model training with average, worst and best model:
 
 > python3 nerTagger.py --dataset-type conll2012 --fold-count 10 train_eval
-
 
 ##### French model (based on Le Monde corpus)
 
@@ -760,9 +758,7 @@ __Models__:
 
 * augment word vectors with features, in particular layout features generated by GROBID
 
-* Review/rewrite the current Linear Chain CRF layer that we are using, this Keras CRF implementation is: 
-- a runtime bottleneck, we could try to use Cython for improving runtime
-- the viterbi decoding is incomplete, it does not outputing final decoded label scores and it can't output n-best 
+* Review/rewrite the current Linear Chain CRF layer that we are using, this Keras CRF implementation is (i) a runtime bottleneck, we could try to use Cython for improving runtime and (ii) the viterbi decoding is incomplete, it does not outputing final decoded label scores and it can't output n-best. 
 
 __NER__:
 
@@ -771,6 +767,8 @@ __NER__:
 * Align the CoNLL corpus tokenisation (CoNLL corpusis "pre-tokenised", but we might not want to follow this tokenisation logic)
 
 __Production stack__:
+
+* improve runtime
 
 * see how efficiently feed and execute those Keras/Tensorflow models with DL4J/Java
 

@@ -71,7 +71,7 @@ def train(embedding_name, dataset_type='conll2003', lang='en', architecture='Bid
         model_name += '-' + architecture
 
         model = sequenceLabelling.Sequence(model_name, 
-                                        max_epoch=60, 
+                                        max_epoch=80, 
                                         recurrent_dropout=0.20,
                                         embeddings_name=embedding_name, 
                                         early_stop=True, 
@@ -216,7 +216,7 @@ def train_eval(embedding_name,
 
         if not train_with_validation_set: 
             model = sequenceLabelling.Sequence(model_name, 
-                                            max_epoch=60, 
+                                            max_epoch=80, 
                                             recurrent_dropout=recurrent_dropout,
                                             embeddings_name=embedding_name, 
                                             early_stop=True, 
@@ -230,7 +230,7 @@ def train_eval(embedding_name,
             # as (Chui & Nochols, 2016) and (Peters and al., 2017)
             # this leads obviously to much higher results 
             model = sequenceLabelling.Sequence(model_name, 
-                                            max_epoch=30, 
+                                            max_epoch=40, 
                                             recurrent_dropout=recurrent_dropout,
                                             embeddings_name=embedding_name, 
                                             early_stop=False, 
@@ -409,7 +409,10 @@ if __name__ == "__main__":
     # be sure to use here the same name as in the registry ('glove-840B', 'fasttext-crawl', 'word2vec'), 
     # and that the path in the registry to the embedding file is correct on your system
     if lang == 'en':
-        embeddings_name = "fasttext-crawl"
+        if dataset_type == 'conll2012':
+            embeddings_name = 'fasttext-crawl'
+        else:
+            embeddings_name = "glove-840B"
     elif lang == 'fr':
         embeddings_name = 'frmix'
 
