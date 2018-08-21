@@ -476,8 +476,8 @@ class Embeddings(object):
         if (self.name == 'wiki.fr') or (self.name == 'wiki.fr.bin'):
             # the pre-trained embeddings are not cased
             word = word.lower()
-        if self.env is None:
-            # db not available, the embeddings should be available in memory (normally!)
+        if self.env is None or self.extension == 'bin':
+            # db not available or embeddings in bin format, the embeddings should be available in memory (normally!)
             return self.get_word_vector_in_memory(word)
         try:    
             with self.env.begin() as txn:
