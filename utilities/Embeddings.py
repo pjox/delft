@@ -210,9 +210,9 @@ class Embeddings(object):
                 self.make_embeddings_simple_in_memory(name, hasHeader)
             else:
                 if not (sys.platform == 'linux' or sys.platform == 'darwin'):
-                    print("FastText .bin format not supported for your platform")
+                    raise ValueError('FastText .bin format not supported for your platform')
                 else:
-                    print("Go to the documentation to get more information on how to install FastText .bin support")
+                    raise ValueError('Go to the documentation to get more information on how to install FastText .bin support')
 
         elif self.embedding_lmdb_path is None or self.embedding_lmdb_path == "None":
             print("embedding_lmdb_path is not specified in the embeddings registry, so the embeddings will be loaded in memory...")
