@@ -1,6 +1,9 @@
 <img align="right" width="150" height="150" src="doc/cat-delft-small.jpg">
 
+[![Build Status](https://travis-ci.org/kermitt2/delft.svg?branch=master)](https://travis-ci.org/kermitt2/delft)
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+
+
 
 # DeLFT
 
@@ -8,17 +11,17 @@ __Work in progress !__
 
 __DeLFT__ (**De**ep **L**earning **F**ramework for **T**ext) is a Keras framework for text processing, covering sequence labelling (e.g. named entity tagging) and text classification (e.g. comment classification). This library re-implements standard state-of-the-art Deep Learning architectures.
 
-From the observation that most of the open source implementations using Keras are toy examples, our motivation is to develop a framework that can be efficient, scalable and more usable in a production environment (with all the known limitations of Python of course for this purpose). The benefits of DELFT are:
+From the observation that most of the open source implementations using Keras are toy examples, our motivation is to develop a framework that can be efficient, scalable and more usable in a production environment (with all the known limitations of Python of course for this purpose). The benefits of DeLFT are:
 
-* Re-implement a variety of state-of-the-art deep learning architectures for both sequence labelling and text classification problems, including the usage of the recent [ELMo](https://allennlp.org/elmo) contextualised embeddings, which can all be used within the same environment. For instance, this allows to reproduce under similar conditions the performance of all recent NER systems.
+* Re-implement a variety of state-of-the-art deep learning architectures for both sequence labelling and text classification problems, including the usage of the recent [ELMo](https://allennlp.org/elmo) contextualised embeddings, which can all be used within the same environment. For instance, this allows to reproduce under similar conditions the performance of all recent NER systems, and even improve most of them.
 
 * Reduce model size, in particular by removing word embeddings from them. For instance, the model for the toxic comment classifier went down from a size of 230 MB with embeddings to 1.8 MB. In practice the size of all the models of DeLFT is less than 2 MB.
 
 * Use dynamic data generator so that the training data do not need to stand completely in memory.
 
-* Load and manage efficiently an unlimited volume of pre-trained embedding: instead of loading pre-trained embeddings in memory - which is horribly slow in Python and limits the number of embeddings to be used simultaneously - the pre-trained embeddings are compiled the first time they are accessed and stored efficiently in a LMDB database. This permits to have the pre-trained embeddings immediately "warm" (no load time), to free memory and to use any number of embeddings with a very negligible impact on runtime when using SSD.
+* Load and manage efficiently an unlimited volume of pre-trained embeddings: instead of loading pre-trained embeddings in memory - which is horribly slow in Python and limits the number of embeddings to be used simultaneously - the pre-trained embeddings are compiled the first time they are accessed and stored efficiently in a LMDB database. This permits to have the pre-trained embeddings immediately "warm" (no load time), to free memory and to use any number of embeddings with a very negligible impact on runtime when using SSD.
 
-The medium term goal is then to provide good performance (accuracy, runtime, compactness) models to a production stack such as Java/Scala and C++.
+The medium term goal is then to provide good performance (accuracy, runtime, compactness) models also to productions stack such as Java/Scala and C++.
 
 DeLFT has been tested with python 3.5, Keras 2.1 and Tensorflow 1.7+ as backend. At this stage, we do not guarantee that DeLFT will run with other different versions of these libraries or other Keras backend versions. As always, GPU(s) are required for decent training time: a GeForce GTX 1050 Ti for instance is absolutely OK without ELMo contextual embeddings. Using ELMo was fine with a GeForce GTX 1080 Ti.
 
@@ -115,15 +118,50 @@ Ok, ok, then set the `embedding-lmdb-path` value to `"None"` in the file `embedd
 
 &nbsp;&nbsp;&nbsp;&nbsp; [3] Xuezhe Ma and Eduard Hovy. "End-to-end Sequence Labelling via Bi-directional LSTM-CNNs-CRF". 2016. https://arxiv.org/abs/1603.01354
 
+* _BidGRU-CRF_, similar to: 
+
+&nbsp;&nbsp;&nbsp;&nbsp; [4] Matthew E. Peters, Waleed Ammar, Chandra Bhagavatula, Russell Power. "Semi-supervised sequence tagging with bidirectional language models". 2017. https://arxiv.org/pdf/1705.00108  
+
 * the current state of the art (92.22% F1 on CoNLL2003 NER dataset, averaged over five runs), _BidLSTM-CRF_ with [ELMo](https://allennlp.org/elmo) contextualised embeddings, see:
 
-&nbsp;&nbsp;&nbsp;&nbsp; [4] Matthew E. Peters, Mark Neumann, Mohit Iyyer, Matt Gardner, Christopher Clark, Kenton Lee, Luke Zettlemoyer. "Deep contextualized word representations". 2018. https://arxiv.org/abs/1802.05365
+&nbsp;&nbsp;&nbsp;&nbsp; [5] Matthew E. Peters, Mark Neumann, Mohit Iyyer, Matt Gardner, Christopher Clark, Kenton Lee, Luke Zettlemoyer. "Deep contextualized word representations". 2018. https://arxiv.org/abs/1802.05365
 
 Note that all our annotation data for sequence labelling follows the [IOB2](https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging)) scheme.
 
 ### Examples
 
 #### NER
+
+##### Overview
+
+We have reimplemented in DeLFT the main neural architectures for NER of the last two years and performed a reproducibility analysis of the these systems with comparable evaluation criterias. Unfortunaltely, in publications, systems are usually compared directly with reported results obtained in different settings, which can bias scores by more than 1.0 points and completely invalidate both comparison and interpretation of results.  
+
+You can read more about our reproducibility study of neural NER in this [blog article](http://science-miner.com/a-reproducibility-study-on-neural-ner/).
+
+All reported scores bellow are __f-score__ for the CoNLL-2003 NER dataset. We report first the f-score averaged over 10 training runs, and second the best f-score over these 10 training runs. All the DeLFT trained models are included in this repository. 
+
+| Architecture  | Implementation | Glove only (avg / best)| Glove + valid. set (avg / best)| ELMo + Glove (avg / best)| ELMo + Glove + valid. set (avg / best)|
+| --- | --- | --- | --- | --- | --- |
+| BidLSTM-CRF   | DeLFT | __90.75__ / __91.35__  | 91.13 / 91.60 | __92.47__ / __92.71__ | __92.69__ / __93.09__ | 
+|               | [(Lample and al., 2016)](https://arxiv.org/abs/1603.01360) | - / 90.94 |      |              |               | 
+| BidLSTM-CNN-CRF | DeLFT | 90.73 / 91.07| 91.01 / 91.26 | 92.30 / 92.57| 92.67 / 93.04 |
+|               | [(Ma & Hovy, 2016)](https://arxiv.org/abs/1603.01354) |  - / 91.21  | | | |
+|               | [(Peters & al. 2018)](https://arxiv.org/abs/1802.05365) |  | | 92.22** / - | |
+| BidLSTM-CNN   | DeLFT | 89.23 / 89.47  | 89.35 / 89.87 | 91.66 / 92.00 | 92.01 / 92.16 |
+|               | [(Chiu & Nichols, 2016)](https://arxiv.org/abs/1511.08308) || __90.88***__ / - | | |
+| BidGRU-CRF    | DeLFT | 90.38 / 90.72  | 90.28 / 90.69 | 92.03 / 92.44 | 92.43 / 92.71 |
+|               | [(Peters & al. 2017)](https://arxiv.org/abs/1705.00108) |  | |  | 91.93* / - |
+
+
+
+_*_ reported f-score using Senna word embeddings and not Glove.
+
+** f-score is averaged over 5 training runs. 
+
+*** reported f-score with Senna word embeddings (Collobert 50d) averaged over 10 runs, including case features and not including lexical features. DeLFT implementation of the same architecture includes the capitalization features too, but uses the more efficient GloVe 300d embeddings.
+
+
+##### Command Line Interface
 
 Different datasets and languages are supported. They can be specified by the command line parameters. The general usage of the CLI is as follow: 
 
@@ -163,13 +201,15 @@ optional arguments:
   --file-out FILE_OUT   path for outputting the resulting JSON NER anotations
 ```
 
+More explanations and examples are presented in the following sections. 
+
 ##### CONLL 2003
 
 DeLFT comes with various pre-trained models with the CoNLL-2003 NER dataset.
 
-By default, the BidLSTM-CRF architecture is used. With this available model, glove-840B word embeddings, and optimisation of hyperparameters, the current f1 score on CoNLL 2003 _testb_ set is __91.35__ (best run over 10 training, using _train_ set for training and _testa_ for validation, __90.75__ averaged over these 10 training), as compared to the 90.94 reported in [1]. Best model f1 score becomes __91.60__ when using both _train_ and _testa_ (validation set) for training (best run over 10 training), as it is done by (Chiu & Nichols, 2016) or some recent works like (Peters and al., 2017).  
+By default, the BidLSTM-CRF architecture is used. With this available model, glove-840B word embeddings, and optimisation of hyperparameters, the current f1 score on CoNLL 2003 _testb_ set is __91.35__ (best run over 10 training, using _train_ set for training and _testa_ for validation), as compared to the 90.94 reported in [1], or __90.75__ when averaged over 10 training. Best model f1 score becomes __91.60__ when using both _train_ and _testa_ (validation set) for training (best run over 10 training), as it is done by (Chiu & Nichols, 2016) or some recent works like (Peters and al., 2017).  
 
-Using BidLSTM-CRF model with ELMo embeddings, following [4] and some parameter optimisations and [warm-up](https://github.com/allenai/allennlp/blob/master/tutorials/how_to/elmo.md#notes-on-statefulness-and-non-determinism), make the predictions 30 times slower but improve the f1 score on CoNLL 2003 currently to __92.71__ (best model, using _train_ set for training and _testa_ for validation, __92.47__ averaged over 10 training), or __93.09__ (best model, __92.69__ averaged over 10 training) when training with the validation set (as in the paper Peters and al., 2017).
+Using BidLSTM-CRF model with ELMo embeddings, following [5] and some parameter optimisations and [warm-up](https://github.com/allenai/allennlp/blob/master/tutorials/how_to/elmo.md#notes-on-statefulness-and-non-determinism), make the predictions around 30 times slower but improve the f1 score on CoNLL 2003 currently to __92.47__ (averaged over 10 training, __92.71__ for best model, using _train_ set for training and _testa_ for validation), or __92.69__ (averaged over 10 training, __93.09__ best model) when training with the validation set (as in the paper Peters and al., 2017).
 
 For re-training a model, the CoNLL-2003 NER dataset (`eng.train`, `eng.testa`, `eng.testb`) must be present under `data/sequenceLabelling/CoNLL-2003/` in IOB2 tagging sceheme (look [here](https://github.com/Franck-Dernoncourt/NeuroNER/tree/master/data/conll2003/en) for instance ;) and [here](https://github.com/kermitt2/delft/tree/master/utilities). The CONLL 2003 dataset (English) is the default dataset and English is the default language, but you can also indicate it explicitly as parameter with `--dataset-type conll2003` and specifying explicitly the language `--lang en`.
 
@@ -181,7 +221,7 @@ To use ELMo contextual embeddings, add the parameter `--use-ELMo`. This will slo
 
 > python3 nerTagger.py --dataset-type conll2003 --use-ELMo train_eval
 
-Some recent works like (Chiu & Nichols, 2016), (Yang and al., 2017). (Peters and al., 2017) also train with the validation set, leading obviously to a better accuracy (still they compare their scores with scores previously reported trained differently, which is arguably a bit unfair - this aspect is mentioned in (Ma & Hovy, 2016)). To train with both train and validation sets, use the parameter `--train-with-validation-set`:
+Some recent works like (Chiu & Nichols, 2016) and (Peters and al., 2017) also train with the validation set, leading obviously to a better accuracy (still they compare their scores with scores previously reported trained differently, which is arguably a bit unfair - this aspect is mentioned in (Ma & Hovy, 2016)). To train with both train and validation sets, use the parameter `--train-with-validation-set`:
 
 > python3 nerTagger.py --dataset-type conll2003 --train-with-validation-set train_eval
 
@@ -205,7 +245,7 @@ For evaluating against CoNLL 2003 testb set with the existing model:
 
 ```
 
-If the model has been trained also with the validation set (`--train-with-validation-set`), similarly to (Chiu & Nichols, 2016) or (Peters and al., 2018), results are significantly better:
+If the model has been trained also with the validation set (`--train-with-validation-set`), similarly to (Chiu & Nichols, 2016) or (Peters and al., 2017), results are significantly better:
 
 ```text
     Evaluation on test set:
@@ -312,7 +352,7 @@ If you have trained the model with ELMo, you need to indicate to use ELMo-based 
 
 DeLFT comes with pre-trained models with the [Ontonotes 5.0 CoNLL-2012 NER dataset](http://cemantix.org/data/ontonotes.html). As dataset-type identifier, use `conll2012`. All the options valid for CoNLL-2003 NER dataset are usable for this dataset.
 
-With the default BidLSTM-CRF architecture, FastText embeddings and without any parameter tuning, f1 score of the provided model is __87.01__ (best run over 10 trainings, 86.65 averaged over these 10 trainings) when trained with the train set strictly. When trained with validation set and Glove embeddings, f1 score of the provided model is __86.55__.
+With the default BidLSTM-CRF architecture, FastText embeddings and without any parameter tuning, f1 score of the provided model is __87.01__ (best run over 10 trainings, __86.65__ averaged over these 10 trainings) when trained with the train set strictly. When trained with validation set and Glove embeddings, f1 score of the provided model is __86.55__.
 
 For re-training, the assembled Ontonotes datasets following CoNLL-2012 must be available and converted into IOB2 tagging scheme, see [here](https://github.com/kermitt2/delft/tree/master/utilities) for more details. To train and evaluate following the traditional approach (training with the train set without validation set, and evaluating on test set), use:
 
@@ -621,7 +661,7 @@ To classify a set of comments:
 
 We use the dataset developed and presented by A. Athar in the following article:
 
-[5] Awais Athar. "Sentiment Analysis of Citations using Sentence Structure-Based Features". Proceedings of the ACL 2011 Student Session, 81-87, 2011. http://www.aclweb.org/anthology/P11-3015
+[6] Awais Athar. "Sentiment Analysis of Citations using Sentence Structure-Based Features". Proceedings of the ACL 2011 Student Session, 81-87, 2011. http://www.aclweb.org/anthology/P11-3015
 
 For a given scientific article, the task is to estimate if the occurrence of a bibliographical citation is positive, neutral or negative given its citation context. Note that the dataset, similarly to the Toxic Comment classification, is highly unbalanced (86% of the citations are neutral).
 
@@ -711,7 +751,7 @@ Micro-average:
 
 ```
 
-In [5], based on a SVM (linear kernel) and custom features, the author reports a F-score of 0.898 for micro-average and 0.764 for macro-average. As we can observe, a non-linear deep learning approach, even without any feature engineering nor tuning, is very robust for an unbalanced dataset and provides higher accuracy.
+In [6], based on a SVM (linear kernel) and custom features, the author reports a F-score of 0.898 for micro-average and 0.764 for macro-average. As we can observe, a non-linear deep learning approach, even without any feature engineering nor tuning, is very robust for an unbalanced dataset and provides higher accuracy.
 
 To classify a set of citation contexts:
 
@@ -760,17 +800,17 @@ __Embeddings__:
 
 __Models__:
 
-* Test Theano as alternative backend (waiting for Apache MXNet...)
+* test Theano as alternative backend (waiting for Apache MXNet...)
 
 * augment word vectors with features, in particular layout features generated by GROBID
 
-* Review/rewrite the current Linear Chain CRF layer that we are using, this Keras CRF implementation is (i) a runtime bottleneck, we could try to use Cython for improving runtime and (ii) the viterbi decoding is incomplete, it does not outputing final decoded label scores and it can't output n-best. 
+* review/rewrite the current Linear Chain CRF layer that we are using, this Keras CRF implementation is (i) a runtime bottleneck, we could try to use Cython for improving runtime and (ii) the viterbi decoding is incomplete, it does not outputing final decoded label scores and it can't output n-best. 
 
 __NER__:
 
-* benchmark with OntoNotes 5 - other languages
+* complete the benchmark with OntoNotes 5 - other languages
 
-* Align the CoNLL corpus tokenisation (CoNLL corpusis "pre-tokenised", but we might not want to follow this tokenisation logic)
+* align the CoNLL corpus tokenisation (CoNLL corpusis "pre-tokenised", but we might not want to follow this tokenisation logic)
 
 __Production stack__:
 

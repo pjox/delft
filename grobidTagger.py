@@ -1,4 +1,3 @@
-import os
 import json
 import numpy as np
 from utilities.Embeddings import Embeddings
@@ -22,7 +21,7 @@ def train(model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False):
 
     print(len(x_train), 'train sequences')
     print(len(x_valid), 'validation sequences')
-    
+
     model_name = 'grobid-'+model
     if use_ELMo:
         model_name += '-with_ELMo'
@@ -41,6 +40,7 @@ def train(model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False):
 
     # saving the model
     model.save()
+
 
 # split data, train a GROBID model and evaluate it 
 def train_eval(model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False): 
@@ -77,6 +77,7 @@ def train_eval(model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=Fals
     # saving the model
     model.save()
 
+
 # annotate a list of texts, this is relevant only of models taking only text as input 
 # (so not text with layout information) 
 def annotate_text(texts, model, output_format, use_ELMo=False):
@@ -108,11 +109,11 @@ if __name__ == "__main__":
     parser.add_argument("model")
     parser.add_argument("action")
     parser.add_argument("--fold-count", type=int, default=1)
-    parser.add_argument("--architecture",default='BidLSTM_CRF', help="type of model architecture to be used (BidLSTM_CRF, BidLSTM_CNN_CRF or BidLSTM_CNN_CRF)")
+    parser.add_argument("--architecture",default='BidLSTM_CRF', help="type of model architecture to be used, one of [BidLSTM_CRF, BidLSTM_CNN, BidLSTM_CNN_CRF, BidGRU-CRF]")
     parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings") 
 
     args = parser.parse_args()
-    
+
     model = args.model    
     if not model in models:
         print('invalid model, should be one of', models)
@@ -120,11 +121,11 @@ if __name__ == "__main__":
     action = args.action    
     if (action != 'train') and (action != 'tag') and (action != 'train_eval'):
         print('action not specifed, must be one of [train,train_eval,tag]')
-    
+
     use_ELMo = args.use_ELMo
     architecture = args.architecture
-    if (architecture != 'BidLSTM_CRF') and (architecture != 'BidLSTM_CNN_CRF') and (architecture != 'BidLSTM_CNN_CRF'):
-        print('unknown model architecture, must be one of [BidLSTM_CRF,BidLSTM_CNN_CRF,BidLSTM_CNN_CRF]')
+    if architecture not in ('BidLSTM_CRF', 'BidLSTM_CNN_CRF', 'BidLSTM_CNN_CRF', 'BidGRU-CRF'):
+        print('unknown model architecture, must be one of [BidLSTM_CRF, BidLSTM_CNN_CRF, BidLSTM_CNN_CRF, BidGRU-CRF]')
 
     # change bellow for the desired pre-trained word embeddings using their descriptions in the file 
     # embedding-registry.json
@@ -134,7 +135,7 @@ if __name__ == "__main__":
 
     if action == 'train':
         train(model, embeddings_name, architecture=architecture, use_ELMo=use_ELMo)
-    
+
     if action == 'train_eval':
         if args.fold_count < 1:
             raise ValueError("fold-count should be equal or more than 1")

@@ -13,7 +13,7 @@ import time
 
 # train a model with all available CoNLL 2003 data 
 def train(embedding_name, dataset_type='conll2003', lang='en', architecture='BidLSTM_CRF', use_ELMo=False, data_path=None): 
-    
+
     if (architecture == "BidLSTM_CNN_CRF"):
         word_lstm_units = 200
         batch_size = 20
@@ -59,7 +59,7 @@ def train(embedding_name, dataset_type='conll2003', lang='en', architecture='Bid
 
         # we concatenate train and valid sets
         x_all = np.concatenate((x_train1, x_train2, x_train3), axis=0)
-        y_all = np.concatenate((y_train1, y_train2, t_train3), axis=0)
+        y_all = np.concatenate((y_train1, y_train2, y_train3), axis=0)
 
         # split train and valid sets in a random way
         x_train, x_valid, y_train, y_valid = train_test_split(x_all, y_all, test_size=0.1)
@@ -75,7 +75,6 @@ def train(embedding_name, dataset_type='conll2003', lang='en', architecture='Bid
                                         recurrent_dropout=0.20,
                                         embeddings_name=embedding_name, 
                                         early_stop=True, 
-                                        fold_number=fold_count,
                                         model_type=architecture,
                                         word_lstm_units=word_lstm_units,
                                         batch_size=batch_size,
@@ -127,7 +126,7 @@ def train_eval(embedding_name,
                 train_with_validation_set=False, 
                 use_ELMo=False, 
                 data_path=None): 
-    
+
     if (architecture == "BidLSTM_CNN_CRF"):
         word_lstm_units = 200
         max_epoch = 30
@@ -325,7 +324,7 @@ def eval(dataset_type='conll2003',
     print("\nEvaluation on test set:")
     model.eval(x_test, y_test)
     runtime = round(time.time() - start_time, 3)
-    
+
     print("runtime: %s seconds " % (runtime))
 
 
@@ -349,7 +348,7 @@ def annotate(output_format,
         model_name += '-' + architecture
         model = sequenceLabelling.Sequence(model_name)
         model.load()
-    
+
     elif (dataset_type == 'conll2012') and (lang == 'en'):
         # load model
         model_name = 'ner-en-conll2012'
@@ -370,8 +369,12 @@ def annotate(output_format,
         print("dataset/language combination is not supported:", dataset_type, lang)
         return 
 
-    model.tag_file(file_in=file_in, output_format=output_format, file_out=file_out)
+    start_time = time.time()
 
+    model.tag_file(file_in=file_in, output_format=output_format, file_out=file_out)
+    runtime = round(time.time() - start_time, 3)
+
+    print("runtime: %s seconds " % (runtime))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -389,17 +392,17 @@ if __name__ == "__main__":
     parser.add_argument("--file-out", default=None, help="path for outputting the resulting JSON NER anotations") 
 
     args = parser.parse_args()
-    
+
     action = args.action    
-    if (action != 'train') and (action != 'tag') and (action != 'eval') and (action != 'train_eval'):
+    if action not in ('train', 'tag', 'eval', 'train_eval'):
         print('action not specifed, must be one of [train, train_eval, eval, tag]')
     lang = args.lang
     dataset_type = args.dataset_type
     train_with_validation_set = args.train_with_validation_set
     use_ELMo = args.use_ELMo
     architecture = args.architecture
-    if (architecture != 'BidLSTM_CRF') and (architecture != 'BidLSTM_CNN_CRF') and (architecture != 'BidLSTM_CNN_CRF'):
-        print('unknown model architecture, must be one of [BidLSTM_CRF,BidLSTM_CNN_CRF,BidLSTM_CNN_CRF]')
+    if architecture not in ('BidLSTM_CRF', 'BidLSTM_CNN_CRF', 'BidLSTM_CNN_CRF', 'BidGRU_CRF'):
+        print('unknown model architecture, must be one of [BidLSTM_CRF, BidLSTM_CNN_CRF, BidLSTM_CNN_CRF, BidGRU_CRF]')
     data_path = args.data_path
     file_in = args.file_in
     file_out = args.file_out
@@ -423,7 +426,7 @@ if __name__ == "__main__":
             architecture=architecture, 
             use_ELMo=use_ELMo,
             data_path=data_path)
-    
+
     if action == 'train_eval':
         if args.fold_count < 1:
             raise ValueError("fold-count should be equal or more than 1")
