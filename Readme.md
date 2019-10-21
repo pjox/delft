@@ -1,6 +1,7 @@
 <img align="right" width="150" height="150" src="doc/cat-delft-small.jpg">
 
 [![Build Status](https://travis-ci.org/kermitt2/delft.svg?branch=master)](https://travis-ci.org/kermitt2/delft)
+[![PyPI version](https://badge.fury.io/py/delft.svg)](https://badge.fury.io/py/delft)
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 
@@ -13,7 +14,7 @@ __DeLFT__ (**De**ep **L**earning **F**ramework for **T**ext) is a Keras framewor
 
 From the observation that most of the open source implementations using Keras are toy examples, our motivation is to develop a framework that can be efficient, scalable and more usable in a production environment (with all the known limitations of Python of course for this purpose). The benefits of DeLFT are:
 
-* Re-implement a variety of state-of-the-art deep learning architectures for both sequence labelling and text classification problems, including the usage of the recent [ELMo](https://allennlp.org/elmo) contextualised embeddings, which can all be used within the same environment. For instance, this allows to reproduce under similar conditions the performance of all recent NER systems, and even improve most of them.
+* Re-implement a variety of state-of-the-art deep learning architectures for both sequence labelling and text classification problems, including the usage of the recent [ELMo](https://allennlp.org/elmo) and [BERT](https://github.com/google-research/bert) contextualised embeddings, which can all be used within the same environment. For instance, this allows to reproduce under similar conditions the performance of all recent NER systems, and even improve most of them.
 
 * Reduce model size, in particular by removing word embeddings from them. For instance, the model for the toxic comment classifier went down from a size of 230 MB with embeddings to 1.8 MB. In practice the size of all the models of DeLFT is less than 2 MB, except for Ontonotes 5.0 NER model which is 4.7 MB.
 
@@ -21,31 +22,32 @@ From the observation that most of the open source implementations using Keras ar
 
 * Load and manage efficiently an unlimited volume of pre-trained embeddings: instead of loading pre-trained embeddings in memory - which is horribly slow in Python and limits the number of embeddings to be used simultaneously - the pre-trained embeddings are compiled the first time they are accessed and stored efficiently in a LMDB database. This permits to have the pre-trained embeddings immediately "warm" (no load time), to free memory and to use any number of embeddings with a very negligible impact on runtime when using SSD.
 
-The medium term goal is then to provide good performance (accuracy, runtime, compactness) models also to productions stack such as Java/Scala and C++.
+The medium term goal is then to provide good performance (accuracy, runtime, compactness) models also to productions stack such as Java/Scala and C++. A native Java integration of these deep learning models has been realized in [GROBID](https://github.com/kermitt2/grobid) via [JEP](https://github.com/ninia/jep).
 
-DeLFT has been tested with python 3.5, Keras 2.1 and Tensorflow 1.7+ as backend. At this stage, we do not guarantee that DeLFT will run with other different versions of these libraries or other Keras backend versions. As always, GPU(s) are required for decent training time: a GeForce GTX 1050 Ti for instance is absolutely OK without ELMo contextual embeddings. Using ELMo was fine with a GeForce GTX 1080 Ti.
+DeLFT has been tested with python 3.5, Keras 2.1 and Tensorflow 1.7+ as backend. At this stage, we do not guarantee that DeLFT will run with other different versions of these libraries or other Keras backend versions. As always, GPU(s) are required for decent training time: a GeForce GTX 1050 Ti for instance is absolutely OK without ELMo contextual embeddings. Using ELMo or BERT Base model is fine with a GeForce GTX 1080 Ti.
 
 ## Install
 
 Get the github repo:
 
-> git clone https://github.com/kermitt2/delft
-
-> cd delft
-
+```sh
+git clone https://github.com/kermitt2/delft
+cd delft
+```
 It is advised to setup first a virtual environment to avoid falling into one of these gloomy python dependency marshlands:
 
-> virtualenv --system-site-packages -p python3 env
+```sh
+virtualenv --system-site-packages -p python3 env
+source env/bin/activate
+```
 
-> source env/bin/activate
+Install the dependencies:
 
-Install the dependencies, if you have a GPU and CUDA (>=8.0) installed use:
+```sh
+pip3 install -r requirements.txt
+```
 
-> pip3 install -r requirements-gpu.txt
-
-otherwise if you can use only your CPU:
-
-> pip3 install -r requirements.txt
+DeLFT uses tensorflow 1.7 as backend, and will exploit your available GPU with the condition that CUDA (>=8.0) is properly installed. 
 
 You need then to download some pre-trained word embeddings and notify their path into the embedding registry. We suggest for exploiting the provided models:
 
@@ -58,6 +60,10 @@ You need then to download some pre-trained word embeddings and notify their path
 * _fasttext_wiki_fr_ (1.1M, NOT cased, 300 dim. vectors) for French: [wiki.fr](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.fr.vec)
 
 * _ELMo_ trained on 5.5B word corpus (will produce 1024 dim. vectors) for English: [options](https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json) and [weights](https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5)
+
+* _BERT_ for English, we are using BERT-Base, Cased, 12-layer, 768-hidden, 12-heads , 110M parameters: available [here](https://storage.googleapis.com/bert_models/2018_10_18/cased_L-12_H-768_A-12.zip)
+
+* _SciBERT_ for English and scientific content: [SciBERT-cased](https://s3-us-west-2.amazonaws.com/ai2-s2-research/scibert/tensorflow_models/scibert_scivocab_cased.tar.gz)
 
 Then edit the file `embedding-registry.json` and modify the value for `path` according to the path where you have saved the corresponding embeddings. The embedding files must be unzipped.
 
@@ -126,6 +132,12 @@ Ok, ok, then set the `embedding-lmdb-path` value to `"None"` in the file `embedd
 
 &nbsp;&nbsp;&nbsp;&nbsp; [5] Matthew E. Peters, Mark Neumann, Mohit Iyyer, Matt Gardner, Christopher Clark, Kenton Lee, Luke Zettlemoyer. "Deep contextualized word representations". 2018. https://arxiv.org/abs/1802.05365
 
+* Feature extraction to be used as contextual embeddings can also be obtained from BERT, as ELMo alternative, as explained in section 5.4 of: 
+
+&nbsp;&nbsp;&nbsp;&nbsp; [6] Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova, BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. 2018. https://arxiv.org/abs/1810.04805
+
+The addition of BERT transformer architecture (with fine-tuning), as alternative to the above RNN architectures for sequence labeling, is currently work in progress. 
+
 Note that all our annotation data for sequence labelling follows the [IOB2](https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging)) scheme.
 
 ### Examples
@@ -169,7 +181,7 @@ Different datasets and languages are supported. They can be specified by the com
 usage: nerTagger.py [-h] [--fold-count FOLD_COUNT] [--lang LANG]
                     [--dataset-type DATASET_TYPE]
                     [--train-with-validation-set]
-                    [--architecture ARCHITECTURE] [--use-ELMo]
+                    [--architecture ARCHITECTURE] [--use-ELMo] [--use-BERT]
                     [--data-path DATA_PATH] [--file-in FILE_IN]
                     [--file-out FILE_OUT]
                     action
@@ -194,11 +206,19 @@ optional arguments:
                         [BidLSTM_CRF, BidLSTM_CNN, BidLSTM_CNN_CRF, BidGRU-
                         CRF]
   --use-ELMo            Use ELMo contextual embeddings
+  --use-BERT            Use BERT extracted features (embeddings)
   --data-path DATA_PATH
                         path to the corpus of documents for training (only use
                         currently with Ontonotes corpus in orginal XML format)
   --file-in FILE_IN     path to a text file to annotate
   --file-out FILE_OUT   path for outputting the resulting JSON NER anotations
+  --embedding EMBEDDING
+                        The desired pre-trained word embeddings using their
+                        descriptions in the file embedding-registry.json. Be
+                        sure to use here the same name as in the registry
+                        ('glove-840B', 'fasttext-crawl', 'word2vec'), and that
+                        the path in the registry to the embedding file is
+                        correct on your system.
 ```
 
 More explanations and examples are presented in the following sections. 
@@ -217,7 +237,7 @@ For training and evaluating following the traditional approach (training with th
 
 > python3 nerTagger.py --dataset-type conll2003 train_eval
 
-To use ELMo contextual embeddings, add the parameter `--use-ELMo`. This will slow down considerably (30 times) the first epoch of the training, then the contextual embeddings will be cached and the rest of the training will be similar to usual embeddings in term of training time.
+To use ELMo contextual embeddings, add the parameter `--use-ELMo`. This will slow down considerably (30 times) the first epoch of the training, then the contextual embeddings will be cached and the rest of the training will be similar to usual embeddings in term of training time. Alternatively add `--use-BERT` to use BERT extracted features as contextual embeddings to the RNN architecture. 
 
 > python3 nerTagger.py --dataset-type conll2003 --use-ELMo train_eval
 
@@ -348,9 +368,14 @@ If you have trained the model with ELMo, you need to indicate to use ELMo-based 
 
 > python3 nerTagger.py --dataset-type conll2003 --use-ELMo --file-in data/test/test.ner.en.txt tag
 
+For English NER tagging, the default static embeddings is Glove (`glove-840B`). Other static embeddings can be specified with the parameter `--embedding`, for instance:
+
+> python3 nerTagger.py --dataset-type conll2003 --embedding word2vec train_eval
+
+
 ##### Ontonotes 5.0 CONLL 2012
 
-DeLFT comes with pre-trained models with the [Ontonotes 5.0 CoNLL-2012 NER dataset](http://cemantix.org/data/ontonotes.html). As dataset-type identifier, use `conll2012`. All the options valid for CoNLL-2003 NER dataset are usable for this dataset.
+DeLFT comes with pre-trained models with the [Ontonotes 5.0 CoNLL-2012 NER dataset](http://cemantix.org/data/ontonotes.html). As dataset-type identifier, use `conll2012`. All the options valid for CoNLL-2003 NER dataset are usable for this dataset. Default static embeddings for Ontonotes are `fasttext-crawl`, which can be changed with parameter `--embedding`.
 
 With the default BidLSTM-CRF architecture, FastText embeddings and without any parameter tuning, f1 score is __86.65__ averaged over these 10 trainings, with best run at  __87.01__ (provided model) when trained with the train set strictly. 
 
@@ -391,7 +416,7 @@ With ELMo embeddings (using the default hyper-parameters, except the batch size 
 
 ```text
 Evaluation on test set:
-  f1 (micro): 88.72
+  f1 (micro): 89.01
                   precision    recall  f1-score   support
 
              LAW     0.7188    0.5750    0.6389        40
@@ -422,7 +447,7 @@ For ten model training with average, worst and best model with ELMo embeddings, 
 
 ##### French model (based on Le Monde corpus)
 
-Note that Le Monde corpus is subject to copyrights and is limited to research usage only. This is the default French model, so it will be used by simply indicating the language as parameter: `--lang fr`, but you can also indicate explicitly the dataset with `--dataset-type lemonde`.
+Note that Le Monde corpus is subject to copyrights and is limited to research usage only. This is the default French model, so it will be used by simply indicating the language as parameter: `--lang fr`, but you can also indicate explicitly the dataset with `--dataset-type lemonde`. Default static embeddings for French language models are `wiki.fr`, which can be changed with parameter `--embedding`.
 
 Similarly as before, for training and evaluating use:
 
@@ -432,21 +457,76 @@ In practice, we need to repeat training and evaluation several times to neutrali
 
 > python3 nerTagger.py --lang fr --fold-count 10 train_eval
 
-The performance is as follow, with a f-score of __91.83__:
+The performance is as follow, with a f-score of __91.01__ averaged over 10 training:
 
 ```text
-** Best ** model scores -
+average over 10 folds
+  macro f1 = 0.9100881012386587
+  macro precision = 0.9048633201198737
+  macro recall = 0.9153907496012759 
 
-                   precision recall    f1-score     support
+** Worst ** model scores - 
 
-      <person>     0.9421    0.9721    0.9569       251
-    <artifact>     1.0000    0.5000    0.6667         4
-    <business>     0.8647    0.9176    0.8903       376
-    <location>     0.9545    0.9701    0.9623       368
-<organisation>     0.9239    0.8089    0.8626       225
- <institution>     0.7714    0.9000    0.8308        30
+                  precision    recall  f1-score   support
 
-   avg / total     0.9139    0.9226    0.9183      1254
+      <location>     0.9467    0.9647    0.9556       368
+   <institution>     0.8621    0.8333    0.8475        30
+      <artifact>     1.0000    0.5000    0.6667         4
+  <organisation>     0.9146    0.8089    0.8585       225
+        <person>     0.9264    0.9522    0.9391       251
+      <business>     0.8463    0.8936    0.8693       376
+
+all (micro avg.)     0.9040    0.9083    0.9061      1254
+
+** Best ** model scores - 
+
+                  precision    recall  f1-score   support
+
+      <location>     0.9439    0.9592    0.9515       368
+   <institution>     0.8667    0.8667    0.8667        30
+      <artifact>     1.0000    0.5000    0.6667         4
+  <organisation>     0.8813    0.8578    0.8694       225
+        <person>     0.9453    0.9641    0.9546       251
+      <business>     0.8706    0.9122    0.8909       376
+
+all (micro avg.)     0.9090    0.9242    0.9166      1254
+```
+
+With frELMo:
+
+> python3 nerTagger.py --lang fr --fold-count 10 --use-ELMo train_eval
+
+```text
+average over 10 folds
+    macro f1 = 0.9209397554337976
+    macro precision = 0.91949107960079
+    macro recall = 0.9224082934609251 
+
+** Worst ** model scores - 
+
+                  precision    recall  f1-score   support
+
+  <organisation>     0.8704    0.8356    0.8526       225
+        <person>     0.9344    0.9641    0.9490       251
+      <artifact>     1.0000    0.5000    0.6667         4
+      <location>     0.9173    0.9647    0.9404       368
+   <institution>     0.8889    0.8000    0.8421        30
+      <business>     0.9130    0.8936    0.9032       376
+
+all (micro avg.)     0.9110    0.9147    0.9129      1254
+
+** Best ** model scores - 
+
+                  precision    recall  f1-score   support
+
+  <organisation>     0.9061    0.8578    0.8813       225
+        <person>     0.9416    0.9641    0.9528       251
+      <artifact>     1.0000    0.5000    0.6667         4
+      <location>     0.9570    0.9674    0.9622       368
+   <institution>     0.8889    0.8000    0.8421        30
+      <business>     0.9016    0.9255    0.9134       376
+
+all (micro avg.)     0.9268    0.9290    0.9279      1254
 ```
 
 For training with all the dataset without evaluation:
@@ -496,7 +576,7 @@ This above work is licensed under a [Creative Commons Attribution-Noncommercial 
 
 #### GROBID models
 
-DeLFT supports [GROBID](https://github.com/kermitt2/grobid) training data (originally for CRF) and GROBID feature matrix to be labelled.
+DeLFT supports [GROBID](https://github.com/kermitt2/grobid) training data (originally for CRF) and GROBID feature matrix to be labelled. Default static embeddings for GROBID models are `glove-840B`, which can be changed with parameter `--embedding`. 
 
 Train a model:
 
@@ -590,6 +670,12 @@ Similarly to the NER models, to use ELMo contextual embeddings, add the paramete
 
 > python3 grobidTagger.py citation --use-ELMo train_eval
 
+Add the parameter `--use-BERT` to use BERT extracted features as contextual embeddings for the RNN architecture. 
+
+Similarly to the NER models, for n-fold training (action `train_eval` only), specify the value of `n` with the parameter `--fold-count`, e.g.:
+
+> python3 grobidTagger.py citation --fold-count=10 train_eval
+
 (To be completed)
 
 #### Insult recognition
@@ -662,7 +748,13 @@ All the following models includes Dropout, Pooling and Dense layers with hyperpa
 * `mix1`: one layer Bidirectional GRU followed by a Bidirectional LSTM
 * `dpcnn`: Deep Pyramid Convolutional Neural Networks (but not working as expected - to be reviewed)
 
+also available (via TensorFlow): 
+
+* `bert` or `scibert`: BERT (Bidirectional Encoder Representations from Transformers) architecture (classification corresponds to a fine tuning)
+
 Note: by default the first 300 tokens of the text to be classified are used, which is largely enough for any _short text_ classification tasks and works fine with low profile GPU (for instance GeForce GTX 1050 Ti with 4 GB memory). For taking into account a larger portion of the text, modify the config model parameter `maxlen`. However, using more than 1000 tokens for instance requires a modern GPU with enough memory (e.g. 10 GB).
+
+For all these RNN architectures, it is possible to use ELMo contextual embeddings (`--use-ELMo`) or BERT extracted features as embeddings (`--use-BERT`). The integration of BERT as an additional non-RNN architecture is done via TensorFlow, we do not mix Keras and TensorFlow layers. 
 
 ### Examples
 
@@ -692,7 +784,7 @@ To classify a set of comments:
 
 We use the dataset developed and presented by A. Athar in the following article:
 
-[6] Awais Athar. "Sentiment Analysis of Citations using Sentence Structure-Based Features". Proceedings of the ACL 2011 Student Session, 81-87, 2011. http://www.aclweb.org/anthology/P11-3015
+[7] Awais Athar. "Sentiment Analysis of Citations using Sentence Structure-Based Features". Proceedings of the ACL 2011 Student Session, 81-87, 2011. http://www.aclweb.org/anthology/P11-3015
 
 For a given scientific article, the task is to estimate if the occurrence of a bibliographical citation is positive, neutral or negative given its citation context. Note that the dataset, similarly to the Toxic Comment classification, is highly unbalanced (86% of the citations are neutral).
 
@@ -708,9 +800,9 @@ Training and evalation (ratio):
 
 > python3 citationClassifier.py train_eval
 
-which should produce the following evaluation (using the 2-layers Bidirectional GRU model `gru`):
+<!-- which should produce the following evaluation (using the 2-layers Bidirectional GRU model `gru`):
 
-<!-- eval before data generator
+eval before data generator
 ```
 Evaluation on 896 instances:
 
@@ -744,7 +836,7 @@ Micro-average:
     average log-loss = 0.18922222475016712
     average roc auc = 0.9319196428571429
 ```    
--->
+
 
 ```text
 Evaluation on 896 instances:
@@ -782,7 +874,8 @@ Micro-average:
 
 ```
 
-In [6], based on a SVM (linear kernel) and custom features, the author reports a F-score of 0.898 for micro-average and 0.764 for macro-average. As we can observe, a non-linear deep learning approach, even without any feature engineering nor tuning, is very robust for an unbalanced dataset and provides higher accuracy.
+In [7], based on a SVM (linear kernel) and custom features, the author reports a F-score of 0.898 for micro-average and 0.764 for macro-average. As we can observe, a non-linear deep learning approach, even without any feature engineering nor tuning, is very robust for an unbalanced dataset and provides higher accuracy.
+-->
 
 To classify a set of citation contexts:
 
@@ -818,7 +911,6 @@ which will produce some JSON output like this:
     "runtime": 1.202
 }
 
-
 ```
 
 ## TODO
@@ -827,9 +919,11 @@ __Embeddings__:
 
 * use/experiment more with OOV mechanisms
 
-* train decent French embeddings (Glove and ELMo)
+* train decent French embeddings (ELMo)
 
 __Models__:
+
+* add BERT transformer architecture (non just the extracted features as embeddings as now)
 
 * test Theano as alternative backend (waiting for Apache MXNet...)
 
@@ -841,13 +935,11 @@ __NER__:
 
 * complete the benchmark with OntoNotes 5 - other languages
 
-* align the CoNLL corpus tokenisation (CoNLL corpusis "pre-tokenised", but we might not want to follow this tokenisation logic)
+* align the CoNLL corpus tokenisation (CoNLL corpus is "pre-tokenised", but we might not want to follow this particular tokenisation)
 
 __Production stack__:
 
 * improve runtime
-
-* see how efficiently feed and execute those Keras/Tensorflow models with DL4J/Java
 
 __Build more models and examples__...
 

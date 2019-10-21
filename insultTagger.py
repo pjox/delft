@@ -1,9 +1,10 @@
 import os
 import json
-from utilities.Embeddings import Embeddings
-import sequenceLabelling
-from utilities.Tokenizer import tokenizeAndFilter
-from sequenceLabelling.reader import load_data_and_labels_xml_file, load_data_and_labels_conll
+from delft.utilities.Embeddings import Embeddings
+import delft.sequenceLabelling
+from delft.sequenceLabelling import Sequence
+from delft.utilities.Tokenizer import tokenizeAndFilter
+from delft.sequenceLabelling.reader import load_data_and_labels_xml_file, load_data_and_labels_conll
 import argparse
 import keras.backend as K
 import time
@@ -21,7 +22,7 @@ def train(embeddings_name):
     print(len(x_train), 'train sequences')
     print(len(x_valid), 'validation sequences')
 
-    model = sequenceLabelling.Sequence('insult', max_epoch=50, embeddings_name=embeddings_name)
+    model = Sequence('insult', max_epoch=50, embeddings_name=embeddings_name)
     model.train(x_train, y_train, x_valid, y_valid)
     print('training done')
 
@@ -34,7 +35,7 @@ def annotate(texts, output_format):
     annotations = []
 
     # load model
-    model = sequenceLabelling.Sequence('insult')
+    model = Sequence('insult')
     model.load()
 
     start_time = time.time()
@@ -56,18 +57,22 @@ if __name__ == "__main__":
 
     parser.add_argument("action")
     parser.add_argument("--fold-count", type=int, default=1)
+    parser.add_argument(
+        "--embedding", default='fasttext-crawl',
+        help=(
+            "The desired pre-trained word embeddings using their descriptions in the file"
+            " embedding-registry.json."
+            " Be sure to use here the same name as in the registry ('glove-840B', 'fasttext-crawl', 'word2vec'),"
+            " and that the path in the registry to the embedding file is correct on your system."
+        )
+    )
 
     args = parser.parse_args()
 
     if args.action not in ('train', 'tag'):
         print('action not specifed, must be one of [train,tag]')
 
-    # Change below for the desired pre-trained word embeddings using their descriptions in the file 
-    # embedding-registry.json
-    # be sure to use here the same name as in the registry ('glove-840B', 'fasttext-crawl', 'word2vec'), 
-    # and that the path in the registry to the embedding file is correct on your system
-    #embeddings_name = "glove-840B"
-    embeddings_name = "fasttext-crawl"
+    embeddings_name = args.embedding
 
     if args.action == 'train':
         train(embeddings_name)
